@@ -39,20 +39,23 @@ The route uses the WHBAR token, not its wrapper contract. Protocol source: [Sauc
 
 ## Commands
 
-| Command                           | Result / side effects                                                                                            |
-| --------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `npm run dev`                     | Start Next.js development server                                                                                 |
-| `npm run lint`                    | ESLint and shared/frontend TypeScript checks, including the quote example                                        |
-| `npm test`                        | Local TypeScript and mocked contract tests; no network transactions                                              |
-| `npm run build`                   | Compile Solidity and build Next.js for production                                                                |
-| `npm start`                       | Serve the existing production build                                                                              |
-| `npm run smoke`                   | HTTP route checks against `SMOKE_ORIGIN`; no writes                                                              |
-| `npm run probe`                   | Live quotes on both networks; inspect each result                                                                |
-| `npm run hardhat:compile`         | Compile Solidity with pinned local solc                                                                          |
-| `npm run hardhat:deploy`          | **Testnet write:** deploy the checkout, save `deployments/testnet.json`                                          |
-| `npm run testnet:payment`         | **Testnet writes:** optional association, invoice creation and payment, save `deployments/payment-evidence.json` |
-| `npm run check`                   | Lint, tests and build in sequence; does not boot the app                                                         |
-| `node scripts/prepare-vercel.mjs` | Package tracked web/shared files for CLI hosting; print a temporary directory                                    |
+| Command                           | Result / side effects                                                                                                        |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `npm run dev`                     | Start Next.js development server                                                                                             |
+| `npm run lint`                    | ESLint and shared/frontend TypeScript checks, including the quote example                                                    |
+| `npm test`                        | Local TypeScript and mocked contract tests; no network transactions                                                          |
+| `npm run build`                   | Compile Solidity and build Next.js for production                                                                            |
+| `npm start`                       | Serve the existing production build                                                                                          |
+| `npm run smoke`                   | HTTP route checks against `SMOKE_ORIGIN`; no writes                                                                          |
+| `npm run probe`                   | Live quotes on both networks; inspect each result                                                                            |
+| `npm run hardhat:compile`         | Compile Solidity with pinned local solc                                                                                      |
+| `npm run hardhat:deploy`          | **Testnet write:** deploy the checkout, save `deployments/testnet.json`                                                      |
+| `npm run testnet:payment`         | **Testnet writes:** optional association, invoice creation and payment, save `deployments/payment-evidence.json`             |
+| `npm run submission:check`        | Source/evidence preflight; verifies actual testnet payment over RPC and mirror, fails if missing; optional receipt JSON path |
+| `npm run check`                   | Lint, tests and build in sequence; does not boot the app                                                                     |
+| `node scripts/prepare-vercel.mjs` | Package tracked web/shared files for CLI hosting; print a temporary directory                                                |
+
+The preset-based `/api/preview` route uses a fixed allowlist and no env overrides; every preview has a null checkout. It supports `mainnet-usdc`, `testnet-sauce` and `mainnet-sauce`. This is separate from the configured invoice endpoints.
 
 ## HTTP API
 
@@ -62,6 +65,7 @@ All routes are GET requests. They perform reads; wallet signing happens in the b
 | ------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------- |
 | `/api/config`       | Optional `network=testnet` or `mainnet`                                                    | `{ config, token }` including public RPC/router/token addresses           |
 | `/api/quote`        | `amount` decimal string **or** `invoiceId`; optional `network`, `slippageBps` (default 50) | `{ quote }`                                                               |
+| `/api/preview`      | `preset` (default `mainnet-usdc`), `amount` (default `25`), `slippageBps` (default 50)     | `{ config, quote, readOnly: true }`; rejects `invoiceId`                  |
 | `/api/preflight`    | `merchant` EVM address                                                                     | `{ ready: true }` after testnet deployment/association checks             |
 | `/api/invoices/:id` | bytes32 invoice ID; optional `tx` transaction hash                                         | `{ config, invoice, token }`, plus `payment` only if the receipt verifies |
 
@@ -69,15 +73,16 @@ A quote with `amount=1` is a preview and cannot be passed to the payment transac
 
 ### Quote fields
 
-| Field            | Unit / behavior                                                                |
-| ---------------- | ------------------------------------------------------------------------------ |
-| `amountOut`      | Integer string in token smallest units                                         |
-| `quotedTinybar`  | Integer string; 100,000,000 tinybar = 1 HBAR                                   |
-| `maximumTinybar` | Quoted spend plus rounded-up slippage allowance; excludes gas                  |
-| `validUntil`     | Unix seconds; at most 60 seconds after generation, bounded by invoice expiry   |
-| `slippageBps`    | Integer 0–500; 50 means 0.5%                                                   |
-| `token`          | `{ name, symbol, decimals }` from the mirror node                              |
-| `invoice`        | Present only for invoice quotes: `{ id, merchant, amount, expiresAt, status }` |
+| Field            | Unit / behavior                                                                                       |
+| ---------------- | ----------------------------------------------------------------------------------------------------- |
+| `context`        | Bound chain ID, checkout, router, token and WHBAR; mismatches are rejected by the transaction builder |
+| `amountOut`      | Integer string in token smallest units                                                                |
+| `quotedTinybar`  | Integer string; 100,000,000 tinybar = 1 HBAR                                                          |
+| `maximumTinybar` | Quoted spend plus rounded-up slippage allowance; excludes gas                                         |
+| `validUntil`     | Unix seconds; at most 60 seconds after generation, bounded by invoice expiry                          |
+| `slippageBps`    | Integer 0–500; 50 means 0.5%                                                                          |
+| `token`          | `{ name, symbol, decimals }` from the mirror node                                                     |
+| `invoice`        | Present only for invoice quotes: `{ id, merchant, amount, expiresAt, status }`                        |
 
 Invoice `status` is `open`, `paid`, `cancelled` or `expired`. `expired` is derived from an open on-chain invoice whose expiry has passed; it is not an extra stored Solidity enum value.
 
@@ -105,6 +110,7 @@ Expect HTTP 400 and `INVALID_NETWORK`. `PENDING_RECEIPT` means retry the **read*
 | Export                                                       | Purpose                                                                                        |
 | ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------- |
 | `networkConfig(network, checkout?, tokenId?)`                | Construct configuration; optional checkout is an EVM address, token is a Hedera ID             |
+| `PREVIEW_PRESETS`, `previewConfig(preset)`                   | Allowlisted read-only token/network examples; no invoice deployment                            |
 | `readToken(config)`                                          | Read metadata; reject deleted, paused, nonfungible or custom-fee assets                        |
 | `assertDeployment(config)`                                   | Match router, WHBAR and token immutables                                                       |
 | `assertAssociated(config, merchant)`                         | Verify merchant's token relationship and freeze/KYC state                                      |

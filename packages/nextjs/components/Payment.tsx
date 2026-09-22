@@ -124,6 +124,34 @@ export function Payment({ id }: { id: string }) {
     setNotice("Invoice cancelled.");
   }
 
+  function downloadReceipt() {
+    if (!data || !payment || !txHash) return;
+    const evidence = {
+      network: data.config.network,
+      chainId: data.config.chainId,
+      checkout: data.config.checkout,
+      invoiceId: data.invoice.id,
+      tokenId: data.config.tokenId,
+      amountOut: payment.amountOut,
+      merchant: payment.merchant,
+      payer: payment.payer,
+      spentTinybar: payment.spentTinybar,
+      refundedTinybar: payment.refundedTinybar,
+      paymentHash: txHash,
+      hashscan: `https://hashscan.io/${data.config.network}/transaction/${txHash}`,
+    };
+    const url = URL.createObjectURL(
+      new Blob([JSON.stringify(evidence, null, 2)], {
+        type: "application/json",
+      }),
+    );
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `saucerpay-${data.invoice.id.slice(0, 10)}.json`;
+    anchor.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
   const status =
     data?.invoice.status === "open" && now >= data.invoice.expiresAt
       ? "expired"
@@ -275,6 +303,11 @@ export function Payment({ id }: { id: string }) {
               </div>
             )}
             <div className="payment-actions">
+              {payment && (
+                <button className="text-button" onClick={downloadReceipt}>
+                  Download verified receipt
+                </button>
+              )}
               <button
                 className="text-button"
                 onClick={() =>

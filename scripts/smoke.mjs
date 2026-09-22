@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 const origin = process.env.SMOKE_ORIGIN || "http://localhost:3000";
-for (const route of ["/", "/guide", "/pay/0x" + "ab".repeat(32)]) {
+for (const route of ["/", "/guide", "/examples", "/pay/0x" + "ab".repeat(32)]) {
   const response = await fetch(origin + route);
   assert.equal(
     response.status,
@@ -14,3 +14,12 @@ const invalid = await fetch(origin + "/api/quote?network=invalid");
 assert.equal(invalid.status, 400);
 assert.equal((await invalid.json()).code, "INVALID_NETWORK");
 console.log("OK invalid-network error contract");
+const unsafe = await fetch(
+  origin + "/api/preview?preset=mainnet-usdc&invoiceId=0x" + "ab".repeat(32),
+);
+assert.equal(unsafe.status, 400);
+assert.equal((await unsafe.json()).code, "READ_ONLY");
+const unknown = await fetch(origin + "/api/preview?preset=__proto__");
+assert.equal(unknown.status, 400);
+assert.equal((await unknown.json()).code, "INVALID_PRESET");
+console.log("OK preview cannot select an arbitrary asset or quote an invoice");

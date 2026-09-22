@@ -2,6 +2,18 @@
 
 [README](../README.md) · [Reviewer walkthrough](REVIEW.md)
 
+## Bounty optimization — 2026-09-22
+
+- Lint/types, 19 shared-package tests and 11 contract tests pass (30 total).
+- Production build and smoke cover the workspace, examples, guide and invoice route.
+- The new preview endpoint returns real mainnet USDC and testnet SAUCE quotes.
+- Browser checks cover both product examples, stale quote invalidation, delayed-response rejection, disabled undeployed writes and desktop/mobile layouts without page errors.
+- Quote construction rejects mismatched chain, checkout, router, token and WHBAR context; legacy/unbound quotes and previews cannot become payments.
+- The submission script typechecks and exits nonzero for missing evidence or a supplied mainnet evidence file. Its successful live-testnet branch remains unexecuted until a funded account provides genuine payment evidence.
+- The receipt download is implemented for a verified payment, but no live two-wallet payment/export has been exercised yet.
+
+![Shared quote component in the prepaid-credit example](examples.png)
+
 ## Documentation walkthrough — 2026-09-22
 
 The revised developer guides were exercised against public source commit

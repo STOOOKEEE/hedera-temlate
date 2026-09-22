@@ -87,6 +87,32 @@ export function networkConfig(
   };
 }
 
+export const PREVIEW_PRESETS = {
+  "mainnet-usdc": { network: "mainnet", tokenId: "0.0.456858", symbol: "USDC" },
+  "testnet-sauce": {
+    network: "testnet",
+    tokenId: "0.0.1183558",
+    symbol: "SAUCE",
+  },
+  "mainnet-sauce": {
+    network: "mainnet",
+    tokenId: "0.0.731861",
+    symbol: "SAUCE",
+  },
+} as const;
+export type PreviewPreset = keyof typeof PREVIEW_PRESETS;
+
+/** Read-only allowlisted assets. No preset carries an invoice deployment. */
+export function previewConfig(preset: string): CheckoutConfig {
+  if (!Object.hasOwn(PREVIEW_PRESETS, preset))
+    throw new CheckoutError(
+      "INVALID_PRESET",
+      "Choose a supported quote asset.",
+    );
+  const selected = PREVIEW_PRESETS[preset as PreviewPreset];
+  return networkConfig(selected.network, undefined, selected.tokenId);
+}
+
 export function tokenUnits(value: string, decimals: number): bigint {
   if (
     !Number.isInteger(decimals) ||
@@ -369,6 +395,13 @@ export async function readInvoice(
 }
 
 export type Quote = {
+  context: {
+    chainId: number;
+    checkout: string | null;
+    router: string;
+    token: string;
+    whbar: string;
+  };
   amountOut: string;
   quotedTinybar: string;
   maximumTinybar: string;
@@ -415,6 +448,13 @@ export async function quotePayment(
       "Invoice expired while obtaining the quote.",
     );
   return {
+    context: {
+      chainId: config.chainId,
+      checkout: config.checkout,
+      router: config.router,
+      token: config.token,
+      whbar: config.whbar,
+    },
     amountOut: amountOut.toString(),
     quotedTinybar: amounts[0].toString(),
     maximumTinybar: max.toString(),
@@ -439,6 +479,20 @@ export function paymentTransaction(
     throw new CheckoutError(
       "INVALID_INVOICE",
       "A deployed on-chain invoice is required.",
+    );
+  if (
+    !quote.context ||
+    quote.context.chainId !== config.chainId ||
+    ["checkout", "router", "token", "whbar"].some((key) => {
+      const field = key as "checkout" | "router" | "token" | "whbar";
+      return (
+        quote.context[field]?.toLowerCase() !== config[field]?.toLowerCase()
+      );
+    })
+  )
+    throw new CheckoutError(
+      "QUOTE_CONTEXT_MISMATCH",
+      "This quote belongs to another network, token or checkout. Request a new quote.",
     );
   if (quote.validUntil <= now || quote.invoice.status !== "open")
     throw new CheckoutError(

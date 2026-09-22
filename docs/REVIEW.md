@@ -4,9 +4,11 @@
 
 This is a navigation guide to the implementation and evidence, not a claim that the submission has passed the eligibility gate. **A genuine SaucerPay testnet transaction is still pending.**
 
+For a ready-to-adapt pitch, timed demo and evidence preflight, use [Submission package](SUBMISSION.md).
+
 ## 1. Try the integration without setup
 
-Open [the live demo](https://temporary-express-mesa-bvkp923.vercel.app), enter `1` in the quote panel and request testnet and mainnet quotes. They read SaucerSwap; no fabricated price is substituted for a failed request. Invoice creation is disabled until a checkout contract is configured.
+Open [the live demo](https://temporary-express-mesa-bvkp923.vercel.app), enter `1` in the quote panel and request SAUCE testnet and USDC mainnet quotes using the quote-asset selector. They read SaucerSwap; no fabricated price is substituted for a failed request. Invoice creation is disabled until a checkout contract is configured.
 
 ## 2. Generate and run a clean copy
 

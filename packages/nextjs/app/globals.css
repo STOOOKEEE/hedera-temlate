@@ -682,6 +682,24 @@ footer {
   margin: 60px auto;
   padding: 0 25px;
 }
+.example-options {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 28px 0;
+}
+.workspace-grid > * {
+  min-width: 0;
+}
+.examples-page .panel p {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.8;
+}
+.examples-page .panel h3 {
+  margin-top: 24px;
+  font-size: 16px;
+}
 .guide h1 {
   font-size: 48px;
 }
@@ -912,8 +930,8 @@ code {
     height: 29px;
   }
   .topbar nav {
-    gap: 16px;
-    font-size: 11px;
+    gap: 12px;
+    font-size: 10px;
   }
   .workspace {
     padding: 32px 20px 0;

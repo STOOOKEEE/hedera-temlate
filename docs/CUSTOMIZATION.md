@@ -12,6 +12,20 @@ Start from the generated monorepo. Keep the checkout package and contract; repla
 
 This confirms that your product screen can use the existing payment integration before you change contract behavior.
 
+## Reuse a live quote component
+
+The [QuotePreview component](../packages/nextjs/components/QuotePreview.tsx) is used by both the workspace and [product examples](../packages/nextjs/app/examples/page.tsx). In a Next.js screen:
+
+```tsx
+import { QuotePreview } from "@/components/QuotePreview";
+
+export default function ServicePricing() {
+  return <QuotePreview initialAmount="25" initialPreset="mainnet-usdc" />;
+}
+```
+
+Supported presets are `mainnet-usdc`, `testnet-sauce` and `mainnet-sauce`. This component is read-only. It clears stale results when inputs change and ignores responses belonging to superseded requests. It never creates an invoice or grants credits.
+
 ## Map a product order to an invoice
 
 Choose a merchant wallet and a non-sensitive, unique bytes32 reference. The reference is public; do not put customer data or a guessable hash of confidential information into it. The demo uses random bytes.

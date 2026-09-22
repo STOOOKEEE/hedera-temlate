@@ -73,6 +73,8 @@ The application reads a current quote from the real router and checks the settle
 
 The contract receives no settlement tokens: the router delivers directly to the merchant. This avoids requiring the checkout contract to associate every output asset. Before/after balance checks enforce exact receipt and reject under-delivery, including ordinary transfer-fee effects. The UI rejects tokens declaring custom fees before quoting.
 
+A quote includes its chain ID, checkout, router, WHBAR and settlement token. The transaction builder rejects a quote from another context before requesting a signature. Read-only presets have no checkout or invoice and cannot be submitted as payments.
+
 ## Proof and recovery
 
 After submission the payment page stores the transaction hash in the URL before waiting for a receipt. Refreshing reads the on-chain invoice and verifies the receipt independently through the server's RPC endpoint. Verification checks successful status, destination, event emitter, invoice ID, merchant and output amount. It never interprets a bare transaction hash as success.

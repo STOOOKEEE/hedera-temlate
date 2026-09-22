@@ -28,6 +28,10 @@ Use Node.js 22+ and npm workspaces. Install with `npm ci` at the repository root
 | Validate served routes                 | `npm start`, then `npm run smoke` in another terminal         |
 | Probe live dependencies                | `npm run probe`; inspect both results, not only the exit code |
 
+The read-only `QuotePreview` component is shared by the workspace and product examples. Keep the preset allowlist separate from configured invoice endpoints; do not enable mainnet signing when adding preview assets. Quotes carry chain/checkout/router/token/WHBAR context and must match the transaction configuration.
+
+Run `npm run submission:check` to verify source metadata and a real payment receipt. A failure for missing evidence is expected until the funded testnet flow is executed. It is not the organizer's validator and does not replace fresh-scaffold checks.
+
 The quote example is included in the checkout package's TypeScript checks. Keep documentation examples aligned with the real exports and API response wrappers.
 
 ## Payment invariants

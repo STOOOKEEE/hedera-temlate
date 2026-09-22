@@ -50,8 +50,11 @@ export default function Guide() {
           </li>
         </ol>
         <p>
-          See <code>docs/DEPLOYMENT.md</code> for exact steps, account
-          requirements and transaction evidence.
+          See{" "}
+          <a href="https://github.com/STOOOKEEE/hedera-temlate/blob/main/docs/DEPLOYMENT.md">
+            the deployment walkthrough
+          </a>{" "}
+          for exact steps, account requirements and transaction evidence.
         </p>
       </section>
       <section className="panel">
@@ -61,6 +64,31 @@ export default function Guide() {
           The contract binds the merchant and amount. Your app attaches its
           order ID to the invoice reference and only fulfills the order after
           verifying an <code>InvoicePaid</code> receipt.
+        </p>
+      </section>
+      <section className="panel">
+        <h2>Try a concrete integration</h2>
+        <p>
+          The{" "}
+          <Link href="/examples">
+            service invoice and prepaid-credit examples
+          </Link>{" "}
+          share the same <code>QuotePreview</code> component. Mainnet USDC
+          pricing is live and read-only; your configured testnet checkout
+          handles invoice payment.
+        </p>
+        <p>
+          <a href="https://github.com/STOOOKEEE/hedera-temlate/blob/main/docs/CUSTOMIZATION.md">
+            Customization recipe
+          </a>{" "}
+          ·{" "}
+          <a href="https://github.com/STOOOKEEE/hedera-temlate/blob/main/docs/REFERENCE.md">
+            API reference
+          </a>{" "}
+          ·{" "}
+          <a href="https://github.com/STOOOKEEE/hedera-temlate/blob/main/docs/TROUBLESHOOTING.md">
+            Troubleshooting
+          </a>
         </p>
       </section>
       <section className="panel">

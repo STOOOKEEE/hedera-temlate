@@ -22,6 +22,7 @@ export default function RootLayout({
           </Link>
           <nav>
             <Link href="/">Workspace</Link>
+            <Link href="/examples">Examples</Link>
             <Link href="/guide">Build with it ↗</Link>
           </nav>
           <span className="template-badge">Scaffold-HBAR template</span>

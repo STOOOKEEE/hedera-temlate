@@ -12,6 +12,7 @@ import {
   checkoutInterface,
   verifyPaymentReceipt,
   quotePayment,
+  previewConfig,
 } from "../src/index";
 import type { Invoice, Quote } from "../src/index";
 
@@ -24,6 +25,13 @@ const invoice: Invoice = {
   status: "open",
 };
 const quote: Quote = {
+  context: {
+    chainId: config.chainId,
+    checkout: config.checkout,
+    router: config.router,
+    token: config.token,
+    whbar: config.whbar,
+  },
   amountOut: "1000000",
   quotedTinybar: "101",
   maximumTinybar: "102",
@@ -78,6 +86,45 @@ describe("money and transaction construction", () => {
     for (const id of ["1.0.1", "0.0.0", "0.0.-1", "abc"])
       expect(() => entityAddress(id)).toThrow();
   });
+  it.each(["checkout", "router", "token", "whbar"] as const)(
+    "rejects a quote produced for another %s before building a transaction",
+    (field) => {
+      expect(() =>
+        paymentTransaction(
+          config,
+          {
+            ...quote,
+            context: { ...quote.context, [field]: entityAddress("0.0.999999") },
+          },
+          1000,
+        ),
+      ).toThrow(/another network, token or checkout/);
+    },
+  );
+  it("rejects quotes from another chain and unbound legacy quotes", () => {
+    expect(() =>
+      paymentTransaction(
+        config,
+        {
+          ...quote,
+          context: { ...quote.context, chainId: 295 },
+        },
+        1000,
+      ),
+    ).toThrow(/another network/);
+    const legacy = { ...quote };
+    delete (legacy as Partial<Quote>).context;
+    expect(() => paymentTransaction(config, legacy, 1000)).toThrow(
+      /another network/,
+    );
+  });
+  it("does not allow a read-only preview to become a payment", () => {
+    const preview = { ...quote };
+    delete preview.invoice;
+    expect(() => paymentTransaction(config, preview, 1000)).toThrow(
+      /on-chain invoice/,
+    );
+  });
 });
 
 describe("receipt verification", () => {
@@ -115,6 +162,18 @@ describe("receipt verification", () => {
 });
 
 describe("live integration boundary", () => {
+  it("keeps USDC previews on the canonical mainnet token without a checkout", () => {
+    const usdc = previewConfig("mainnet-usdc");
+    expect(usdc.network).toBe("mainnet");
+    expect(usdc.tokenId).toBe("0.0.456858");
+    expect(usdc.checkout).toBeNull();
+    expect(previewConfig("testnet-sauce").network).toBe("testnet");
+  });
+  it.each(["testnet-usdc", "__proto__", "constructor", "0.0.999"])(
+    "rejects unsupported preview input %s instead of selecting an arbitrary asset",
+    (preset) =>
+      expect(() => previewConfig(preset)).toThrow(/supported quote asset/),
+  );
   it("constructs the direct WHBAR route and uses router amounts, without invented prices", async () => {
     const abi = new Interface([
       "function getAmountsIn(uint256,address[]) view returns (uint256[])",
@@ -153,6 +212,7 @@ describe("live integration boundary", () => {
     const result = await quotePayment(config, { amount: "1", slippageBps: 50 });
     expect(result.quotedTinybar).toBe("101");
     expect(result.maximumTinybar).toBe("102");
+    expect(result.context).toEqual(quote.context);
   });
   it("fails explicitly on endpoint failure or transfer-fee tokens", async () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("offline")));
@@ -161,18 +221,16 @@ describe("live integration boundary", () => {
     ).rejects.toThrow(/unavailable/);
     vi.stubGlobal(
       "fetch",
-      vi
-        .fn()
-        .mockResolvedValue(
-          new Response(
-            JSON.stringify({
-              symbol: "X",
-              decimals: "6",
-              type: "FUNGIBLE_COMMON",
-              custom_fees: { fixed_fees: [{}] },
-            }),
-          ),
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            symbol: "X",
+            decimals: "6",
+            type: "FUNGIBLE_COMMON",
+            custom_fees: { fixed_fees: [{}] },
+          }),
         ),
+      ),
     );
     await expect(
       quotePayment(config, { amount: "1", slippageBps: 50 }),

@@ -43,15 +43,15 @@ The generator consumes `template.json`; its absence in the generated app is expe
 
 In the **quote panel** (separate from the merchant invoice form):
 
-1. Set **Network** to **Testnet**.
+1. Set **Quote asset** to **SAUCE · Testnet**.
 2. Enter `1` in **Requested token amount**.
 3. Click **Get live quote**.
 4. Check the result shows `1 SAUCE`, quoted HBAR, maximum HBAR and a timestamp.
-5. Switch to **Mainnet** and request another quote. This is also read-only.
+5. Choose **USDC · Mainnet (read only)** to preview a stablecoin-denominated order, or **SAUCE · Mainnet (read only)** to compare the default token.
 
 The maximum includes the preview's 0.5% price movement allowance. It excludes network fees. Values depend on live pool reserves; there is no expected fixed HBAR price.
 
-The network selector changes the quote preview, not the configured contract or merchant wallet network. Creation remains testnet-only and unavailable until deployment. The default token IDs differ between networks; see [configuration](REFERENCE.md#configuration).
+The quote-asset selector changes only the read-only preview, not the configured contract or merchant wallet network. Creation remains testnet-only and unavailable until deployment. The default token IDs differ between networks; see [configuration](REFERENCE.md#configuration).
 
 ## 4. Read the same integration outside the UI
 
@@ -88,7 +88,7 @@ In another terminal at the project root:
 npm run smoke
 ```
 
-Expected: lint and types pass, 19 tests pass, build completes, and smoke prints `OK` for the homepage, guide, invoice page and invalid-network response. The last check intentionally sends an invalid request and expects HTTP 400.
+Expected: lint and types pass, 30 tests pass, build completes, and smoke prints `OK` for the homepage, guide, invoice page and invalid-network response. The last check intentionally sends an invalid request and expects HTTP 400.
 
 `npm run probe` separately reads both live networks. Read its per-network results: the command only exits with failure if both probes fail. A zero exit code does not prove both networks are healthy.
 

@@ -25,7 +25,8 @@
     "smoke": "node scripts/smoke.mjs",
     "check": "npm run lint && npm test && npm run build",
     "testnet:payment": "npm run testnet:payment -w @saucerpay/contracts",
-    "format": "prettier --write \"**/*.{ts,tsx,js,cjs,mjs,json,md,css,yml}\""
+    "format": "prettier --write \"**/*.{ts,tsx,js,cjs,mjs,json,md,css,yml}\"",
+    "submission:check": "tsx scripts/submission-check.ts"
   },
   "devDependencies": {
     "@eslint/js": "9.39.1",

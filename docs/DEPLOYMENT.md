@@ -93,7 +93,7 @@ Use an injected EVM wallet such as MetaMask with a funded testnet ECDSA account.
 3. Open the payment page and copy its URL. Record this link: the workspace's list only lasts for the current session.
 4. Open it using the payer wallet. Request a quote, review maximum HBAR spend plus additional network fees, then pay.
 5. The payment page verifies the actual receipt against invoice ID, merchant, amount and emitting checkout contract.
-6. Reload the URL containing `?tx=<actual-hash>`. The server retrieves and verifies the receipt again. Save the HashScan/mirror link for the bounty.
+6. Reload the URL containing `?tx=<actual-hash>`. The server retrieves and verifies the receipt again. Save the HashScan/mirror link for the bounty. **Download verified receipt** exports public payment JSON; `npm run submission:check -- /path/to/receipt.json` independently rechecks it against the network.
 
 **Checkpoint:** the invoice shows paid, the receipt matches the configured contract/invoice/merchant/amount, and the merchant's token balance increased by the invoice amount. A payment screenshot or a wallet notification alone is insufficient. Save the payment link before closing the workspace; its invoice list is not a persistent history.
 

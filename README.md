@@ -18,7 +18,7 @@ A [Scaffold-HBAR](https://docs.hedera.com/solutions/tools/scaffold-hbar/index) t
 | Inspect a published SaucerPay payment transaction           | Not yet — testnet evidence is pending                          |
 | Pay invoices on mainnet                                     | Not enabled in this template                                   |
 
-The example receives **SAUCE**, not dollars. It is a convenient testnet asset, not a stablecoin. A USDC checkout is a possible adaptation, subject to token and pool validation; it is not the demonstrated payment flow. [Validation record](docs/VALIDATION.md).
+The example receives **SAUCE**, not dollars. It is a convenient testnet asset, not a stablecoin. The USDC preview reads real mainnet liquidity; USDC settlement is still an adaptation requiring deployment and payment validation. [Validation record](docs/VALIDATION.md).
 
 ## Who should start here?
 
@@ -41,7 +41,7 @@ cd your-project
 npm run dev
 ```
 
-Open **http://localhost:3000**. In the quote panel, choose **Testnet**, enter `1` and click **Get live quote**. You should see the HBAR needed for 1 SAUCE, a maximum spend and a timestamp. Prices change; a failed network call displays an error, never a sample price.
+Open **http://localhost:3000**. In the quote panel, choose **SAUCE · Testnet**, enter `1` and click **Get live quote**. You should see the HBAR needed for 1 SAUCE, a maximum spend and a timestamp. Prices change; a failed network call displays an error, never a sample price.
 
 **Create payment link is disabled until you configure a contract. This is expected.** Continue with [the first-run walkthrough](docs/GETTING_STARTED.md) or [deploy on testnet](docs/DEPLOYMENT.md).
 
@@ -81,19 +81,23 @@ A quote alone is not payment. Fulfill an order only after checking a successful 
 | Look up env vars, API routes, events and helper functions  | [Reference](docs/REFERENCE.md)             |
 | Resolve setup, quote, wallet or receipt errors             | [Troubleshooting](docs/TROUBLESHOOTING.md) |
 | Host my copy on Vercel                                     | [Web hosting](docs/HOSTING.md)             |
+| Prepare the pitch, demo and verified receipt               | [Submission package](docs/SUBMISSION.md)   |
 | Evaluate the template for the bounty                       | [Reviewer walkthrough](docs/REVIEW.md)     |
 | Work with a coding agent                                   | [AGENTS.md](AGENTS.md)                     |
 
+The [product examples](https://temporary-express-mesa-bvkp923.vercel.app/examples) use the same `QuotePreview` component for a service invoice and a prepaid-credit purchase. Quotes are read-only; your application supplies order persistence and fulfillment.
+
 ## Where to change the code
 
-| Location                                                                               | Responsibility                                                                               |
-| -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| [`packages/checkout/src/index.ts`](packages/checkout/src/index.ts)                     | Quotes, amounts, deployment/association checks, payment transaction and receipt verification |
-| [`packages/checkout/examples/quote.ts`](packages/checkout/examples/quote.ts)           | Runnable quote example with no credentials                                                   |
-| [`packages/hardhat/contracts/SaucerPay.sol`](packages/hardhat/contracts/SaucerPay.sol) | Invoice terms, cancellation and atomic settlement                                            |
-| [`packages/nextjs/components/Workspace.tsx`](packages/nextjs/components/Workspace.tsx) | Merchant workspace and quote preview                                                         |
-| [`packages/nextjs/components/Payment.tsx`](packages/nextjs/components/Payment.tsx)     | Payer flow and receipt recovery                                                              |
-| [`packages/nextjs/app/api`](packages/nextjs/app/api)                                   | Server-side reads; no server signing key                                                     |
+| Location                                                                                     | Responsibility                                                                               |
+| -------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| [`packages/checkout/src/index.ts`](packages/checkout/src/index.ts)                           | Quotes, amounts, deployment/association checks, payment transaction and receipt verification |
+| [`packages/checkout/examples/quote.ts`](packages/checkout/examples/quote.ts)                 | Runnable quote example with no credentials                                                   |
+| [`packages/hardhat/contracts/SaucerPay.sol`](packages/hardhat/contracts/SaucerPay.sol)       | Invoice terms, cancellation and atomic settlement                                            |
+| [`packages/nextjs/components/QuotePreview.tsx`](packages/nextjs/components/QuotePreview.tsx) | Reusable live conversion preview with explicit asset/network presets                         |
+| [`packages/nextjs/components/Workspace.tsx`](packages/nextjs/components/Workspace.tsx)       | Merchant workspace and quote preview                                                         |
+| [`packages/nextjs/components/Payment.tsx`](packages/nextjs/components/Payment.tsx)           | Payer flow and receipt recovery                                                              |
+| [`packages/nextjs/app/api`](packages/nextjs/app/api)                                         | Server-side reads; no server signing key                                                     |
 
 ## Check your changes
 
@@ -105,7 +109,7 @@ npm test
 npm run build
 ```
 
-In two terminals, run `npm start` and then `npm run smoke`. Use `npm run probe` for real read-only quotes. The current suite has 8 TypeScript tests and 11 contract tests; local contract tests use mocks, not Hedera precompiles. [Exact evidence and remaining checks](docs/VALIDATION.md).
+In two terminals, run `npm start` and then `npm run smoke`. Use `npm run probe` for real read-only quotes. The current suite has 19 TypeScript tests and 11 contract tests; local contract tests use mocks, not Hedera precompiles. [Exact evidence and remaining checks](docs/VALIDATION.md).
 
 ## Scope and license
 

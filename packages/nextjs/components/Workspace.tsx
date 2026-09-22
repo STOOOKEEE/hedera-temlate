@@ -5,14 +5,13 @@ import Link from "next/link";
 import { Contract, hexlify, randomBytes, formatUnits } from "ethers";
 import {
   CHECKOUT_ABI,
-  hbarDisplay,
   invoiceId,
   tokenUnits,
   type CheckoutConfig,
   type TokenInfo,
-  type Quote,
 } from "@saucerpay/checkout";
 import { api, connectWallet, message, shortAddress } from "@/lib/wallet";
+import { QuotePreview } from "@/components/QuotePreview";
 
 type Settings = { config: CheckoutConfig; token: TokenInfo };
 type Created = { id: string; amount: string; symbol: string; hash: string };
@@ -27,11 +26,6 @@ export function Workspace() {
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
   const [created, setCreated] = useState<Created[]>([]);
-  const [previewAmount, setPreviewAmount] = useState("10");
-  const [previewNetwork, setPreviewNetwork] = useState("testnet");
-  const [quote, setQuote] = useState<Quote | null>(null);
-  const [quoteError, setQuoteError] = useState("");
-  const [quoting, setQuoting] = useState(false);
 
   async function loadSettings() {
     setConfigError("");
@@ -121,21 +115,6 @@ export function Workspace() {
       ...list,
     ]);
     setNotice("Invoice created. Open it and copy the payment link to share.");
-  }
-  async function preview() {
-    setQuoting(true);
-    setQuoteError("");
-    setQuote(null);
-    try {
-      const data = await api<{ quote: Quote }>(
-        `/api/quote?network=${previewNetwork}&amount=${encodeURIComponent(previewAmount)}&slippageBps=50`,
-      );
-      setQuote(data.quote);
-    } catch (error) {
-      setQuoteError(message(error));
-    } finally {
-      setQuoting(false);
-    }
   }
 
   return (
@@ -320,94 +299,7 @@ export function Workspace() {
           )}
         </section>
         <aside className="preview-column">
-          <section className="quote-panel">
-            <div className="section-heading">
-              <p className="eyebrow">Try the conversion</p>
-              <span className="read-only">READ ONLY</span>
-            </div>
-            <h2>
-              Real liquidity.
-              <br />
-              No wallet needed.
-            </h2>
-            <p>Read a live quote from SaucerSwap. No payment is sent.</p>
-            <form
-              onSubmit={(event) => {
-                event.preventDefault();
-                void preview();
-              }}
-            >
-              <label htmlFor="quote-network">Network</label>
-              <select
-                id="quote-network"
-                value={previewNetwork}
-                onChange={(event) => {
-                  setPreviewNetwork(event.target.value);
-                  setQuote(null);
-                  setQuoteError("");
-                }}
-                disabled={quoting}
-              >
-                <option value="testnet">Hedera testnet</option>
-                <option value="mainnet">Hedera mainnet · read only</option>
-              </select>
-              <label htmlFor="preview-amount">Requested token amount</label>
-              <div className="preview-input">
-                <input
-                  id="preview-amount"
-                  inputMode="decimal"
-                  value={previewAmount}
-                  onChange={(event) => {
-                    setPreviewAmount(event.target.value);
-                    setQuote(null);
-                  }}
-                  disabled={quoting}
-                  required
-                />
-                <span>SAUCE*</span>
-              </div>
-              <button
-                type="submit"
-                className="button quote-button full"
-                disabled={quoting}
-              >
-                {quoting ? "Reading the pool…" : "Get live quote"}{" "}
-                <span>↗</span>
-              </button>
-            </form>
-            {quote && (
-              <div className="quote-result" role="status">
-                <span>
-                  For{" "}
-                  {formatUnits(BigInt(quote.amountOut), quote.token.decimals)}{" "}
-                  {quote.token.symbol}
-                </span>
-                <strong>
-                  {hbarDisplay(BigInt(quote.quotedTinybar))} <small>HBAR</small>
-                </strong>
-                <p>
-                  Maximum {hbarDisplay(BigInt(quote.maximumTinybar))} HBAR ·
-                  0.5% tolerance
-                </p>
-                <small>
-                  Snapshot taken at{" "}
-                  {new Date(
-                    (quote.validUntil - 60) * 1000,
-                  ).toLocaleTimeString()}
-                  . Network fees are additional.
-                </small>
-              </div>
-            )}
-            {quoteError && (
-              <div className="alert quote-error" role="alert">
-                {quoteError}
-              </div>
-            )}
-            <p className="quote-footnote">
-              *Default settlement token. A configured deployment can use another
-              supported HTS token. Pool availability can differ by network.
-            </p>
-          </section>
+          <QuotePreview />
           <div className="template-note">
             <span className="code-icon">{"</>"}</span>
             <div>

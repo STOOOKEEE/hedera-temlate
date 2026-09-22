@@ -47,6 +47,8 @@ curl -i 'http://localhost:3000/api/quote?network=testnet&amount=1&slippageBps=50
 
 For custom-token configuration, use the app API: `npm run probe` always probes the built-in default tokens and does not validate your env override.
 
+`QUOTE_CONTEXT_MISMATCH` means the quote came from a different chain, checkout, router or token configuration. Fetch a new quote from the intended invoice endpoint. A preview has no invoice and cannot become a payment. `INVALID_PRESET` means the preview asset is outside the built-in allowlist.
+
 ## Wallet and deployment
 
 - **No wallet found:** use a browser with an injected EVM wallet, such as MetaMask. A mobile WalletConnect/HashPack flow is not bundled.
