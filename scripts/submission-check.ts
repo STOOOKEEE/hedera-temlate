@@ -131,10 +131,10 @@ if (!existsSync(evidencePath)) {
         "The mirror node does not yet confirm a successful transaction.",
       );
     check("Verified testnet payment evidence", true, "");
+    console.log(`Mirror: ${mirror}`);
     console.log(
       `HashScan: https://hashscan.io/testnet/transaction/${evidence.paymentHash}`,
     );
-    console.log(`Mirror: ${mirror}`);
   } catch (error) {
     check(
       "Verified testnet payment evidence",

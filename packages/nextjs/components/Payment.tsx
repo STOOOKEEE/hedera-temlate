@@ -296,11 +296,11 @@ export function Payment({ id }: { id: string }) {
                   {hbarDisplay(BigInt(payment.refundedTinybar))} HBAR returned
                 </p>
                 <a
-                  href={`https://hashscan.io/${data.config.network}/transaction/${txHash}`}
+                  href={`https://testnet.mirrornode.hedera.com/api/v1/contracts/results/${txHash}`}
                   target="_blank"
                   rel="noreferrer"
                 >
-                  View transaction on HashScan ↗
+                  View verified mirror-node result ↗
                 </a>
               </div>
             )}

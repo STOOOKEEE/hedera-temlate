@@ -12,3 +12,4 @@ deployments/
 playwright-report/
 test-results/
 .vercel/
+.video-work/

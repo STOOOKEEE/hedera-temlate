@@ -33,7 +33,7 @@ The exact-output conversion and surplus return are implemented in a single payme
 
 ## 4. Check chain evidence honestly
 
-[Deploy on testnet](DEPLOYMENT.md), then exercise the two-wallet UI flow or optional smoke. The published [HashScan payment](https://hashscan.io/testnet/transaction/0xd9d3d092b020d8d0e05825f7636f1be6085d3e935a18d2286d4a5448f42a85d1) has separate merchant and payer accounts and passes `npm run submission:check`. The automated smoke supports either one or two accounts and labels the evidence accordingly. The injected-wallet UI signing path has not yet been exercised live.
+[Deploy on testnet](DEPLOYMENT.md), then exercise the two-wallet UI flow or optional smoke. The published [mirror-node payment result](https://testnet.mirrornode.hedera.com/api/v1/contracts/results/0xd9d3d092b020d8d0e05825f7636f1be6085d3e935a18d2286d4a5448f42a85d1) has separate merchant and payer accounts and passes `npm run submission:check`. The automated smoke supports either one or two accounts and labels the evidence accordingly. The injected-wallet UI signing path has not yet been exercised live.
 
 The [validation record](VALIDATION.md#live-testnet-deployment-and-payment--2026-09-22) gives the genuine testnet links, network, contract, token, invoice and observed result. Contract deployment proves deployment; the successful invoice payment demonstrates the conversion and exact token delivery. A quote, screenshot or local mock cannot stand in for either transaction.
 

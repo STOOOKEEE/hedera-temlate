@@ -87,6 +87,7 @@ async function main() {
     JSON.stringify(evidence, null, 2) + "\n",
   );
   console.log(`HEDERA_CHECKOUT_ADDRESS=${address}`);
+  console.log(evidence.mirror);
   console.log(evidence.hashscan);
   console.log(
     "Saved deployments/testnet.json. Configure packages/nextjs/.env.local and restart Next.js.",

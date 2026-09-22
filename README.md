@@ -15,7 +15,7 @@ A [Scaffold-HBAR](https://docs.hedera.com/solutions/tools/scaffold-hbar/index) t
 | Open the hosted app and request real testnet/mainnet quotes | Yes — no installation or wallet                                                                                                           |
 | Install, run tests, build and explore the source            | Yes — no key required                                                                                                                     |
 | Create, cancel and pay invoices on testnet                  | Live checkout deployed; writes require a funded EVM wallet                                                                                |
-| Inspect a published SaucerPay payment transaction           | [Verified two-wallet payment](https://hashscan.io/testnet/transaction/0xd9d3d092b020d8d0e05825f7636f1be6085d3e935a18d2286d4a5448f42a85d1) |
+| Inspect a published SaucerPay payment transaction           | [Verified two-wallet payment on the Hedera Mirror Node](https://testnet.mirrornode.hedera.com/api/v1/contracts/results/0xd9d3d092b020d8d0e05825f7636f1be6085d3e935a18d2286d4a5448f42a85d1) |
 | Pay invoices on mainnet                                     | Not enabled in this template                                                                                                              |
 
 The example receives **SAUCE**, not dollars. It is a convenient testnet asset, not a stablecoin. The USDC preview reads real mainnet liquidity; USDC settlement is still an adaptation requiring deployment and payment validation. [Validation record](docs/VALIDATION.md).

@@ -20,20 +20,24 @@ The reference checkout uses testnet SAUCE. The USDC preview reads actual mainnet
 - Hosted demo: https://saucerpay-hedera.vercel.app
 - Developer docs: [README navigation](../README.md#find-the-right-guide)
 - Architecture: [payment flow and units](ARCHITECTURE.md)
-- Contract deployment: [HashScan](https://hashscan.io/testnet/transaction/0xf810bf564aab4a305b30af5ddff6f95ed87aa8776a439a256f7c846cbb50c136)
-- Two-wallet testnet payment: [HashScan](https://hashscan.io/testnet/transaction/0xd9d3d092b020d8d0e05825f7636f1be6085d3e935a18d2286d4a5448f42a85d1) · [mirror result](https://testnet.mirrornode.hedera.com/api/v1/contracts/results/0xd9d3d092b020d8d0e05825f7636f1be6085d3e935a18d2286d4a5448f42a85d1)
+- Contract deployment: [Hedera Mirror Node result](https://testnet.mirrornode.hedera.com/api/v1/contracts/results/0xf810bf564aab4a305b30af5ddff6f95ed87aa8776a439a256f7c846cbb50c136)
+- Two-wallet testnet payment: [Hedera Mirror Node result](https://testnet.mirrornode.hedera.com/api/v1/contracts/results/0xd9d3d092b020d8d0e05825f7636f1be6085d3e935a18d2286d4a5448f42a85d1) · [HashScan](https://hashscan.io/testnet/transaction/0xd9d3d092b020d8d0e05825f7636f1be6085d3e935a18d2286d4a5448f42a85d1)
 - [Paid invoice on the hosted app](https://saucerpay-hedera.vercel.app/pay/0x8f97d7a7c61394e9f927e2b0d9d7b62fc396d091cfffc0475ab3b13493b58e61?tx=0xd9d3d092b020d8d0e05825f7636f1be6085d3e935a18d2286d4a5448f42a85d1)
 - Browser-exported receipt: the hosted page's **Download verified receipt** action was exercised, and the downloaded JSON passed `npm run submission:check -- /path/to/downloaded.json`.
 - Demo recording: **not recorded yet; follow the script below**
 
 Do not use a deployment address, quote screenshot or unrelated transaction as proof of a completed payment. The actual receipt must match this template's contract and invoice.
 
+## Official submission form
+
+The [official form](https://docs.google.com/forms/d/e/1FAIpQLSfMrExu3tI95KP9WlwtS9JFka5iy3uWOi8vVK4JqpLbd0FTPA/viewform?entry.1760747509=Scaffold+HBAR+Template&usp=pp_url) asks for team contact details, a mainnet Hedera Account ID for possible prize payment, project name, a description of at most three sentences, the public GitHub URL, and a **required video URL under five minutes**. It contains the required developer-experience questions. Put the successful [testnet mirror-node payment result](https://testnet.mirrornode.hedera.com/api/v1/contracts/results/0xd9d3d092b020d8d0e05825f7636f1be6085d3e935a18d2286d4a5448f42a85d1) and hosted demo in its optional **Any other links** field; the bounty brief requires a verifiable testnet transaction link. The form must be submitted by the entrant, and no private key belongs in it.
+
 ## Demo script (about two minutes)
 
 1. **0:00–0:20 — Problem.** Open the workspace. Explain: “My service requests a token; my customer holds HBAR. This starter converts the payment to the exact amount the merchant requested.” State that the live testnet payment uses SAUCE and the mainnet USDC preview is read-only.
 2. **0:20–0:45 — Real integration.** Request a 25 USDC mainnet quote. Show quoted HBAR, maximum spend and token/network provenance. Change the amount; the old quote disappears. Explain that a pool failure produces an error, not a fabricated price.
 3. **0:45–1:05 — Reuse.** Open `/examples`, select service invoice and prepaid API credits. Show that both use `QuotePreview` and that fulfillment remains the application's responsibility.
-4. **1:05–1:40 — Testnet payment.** Open the [real paid invoice](https://saucerpay-hedera.vercel.app/pay/0x8f97d7a7c61394e9f927e2b0d9d7b62fc396d091cfffc0475ab3b13493b58e61?tx=0xd9d3d092b020d8d0e05825f7636f1be6085d3e935a18d2286d4a5448f42a85d1) and HashScan result. Show separate merchant/payer addresses, exactly 1 SAUCE delivered, spent HBAR and the surplus refund. Say the payment was submitted by the two-account testnet script; the injected-wallet UI signing path remains to be tested.
+4. **1:05–1:40 — Testnet payment.** Open the [real paid invoice](https://saucerpay-hedera.vercel.app/pay/0x8f97d7a7c61394e9f927e2b0d9d7b62fc396d091cfffc0475ab3b13493b58e61?tx=0xd9d3d092b020d8d0e05825f7636f1be6085d3e935a18d2286d4a5448f42a85d1) and the [mirror-node result](https://testnet.mirrornode.hedera.com/api/v1/contracts/results/0xd9d3d092b020d8d0e05825f7636f1be6085d3e935a18d2286d4a5448f42a85d1). Show separate merchant/payer addresses, exactly 1 SAUCE delivered, spent HBAR and the surplus refund. Say the payment was submitted by the two-account testnet script; the injected-wallet UI signing path remains to be tested.
 5. **1:40–2:00 — Developer handoff.** Show the one-command scaffold, customization recipe, tests and `npm run submission:check`. Explain that quote context is bound to network/token/contract, and the preflight verifies payment evidence against RPC and mirror data.
 
 ## Reproduce and verify chain evidence
