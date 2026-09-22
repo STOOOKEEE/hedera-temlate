@@ -46,8 +46,10 @@ These are historical diagnostic observations, not prices promised by the app. Ru
 Published on 2026-09-22 at
 https://temporary-express-mesa-bvkp923.vercel.app using Vercel CLI 59.25.0.
 Vercel reported deployment `dpl_7iBBcrpFhNJQLM7Rzmod85butvho` as `READY`.
-This anonymous deployment expires at **2026-09-22 10:59 UTC** unless claimed
-by its owner. The private claim URL is intentionally excluded from this repo.
+The owner confirmed claiming this deployment in their Vercel account on
+2026-09-22. The public URL returned HTTP 200 after that confirmation. Account
+ownership was reported by the owner, not independently checked through an
+authenticated Vercel API. The private claim URL is excluded from this repo.
 
 Verified against the public HTTPS origin:
 

@@ -8,7 +8,7 @@ Build a checkout, marketplace purchase flow or invoice portal without reimplemen
 
 **[Open SaucerPay on Vercel](https://temporary-express-mesa-bvkp923.vercel.app)** — no installation, account or private key required to explore real SaucerSwap quotes.
 
-The initial Vercel deployment is temporary and expires on **September 22, 2026 at 10:59 UTC** unless the owner claims it. It provides live testnet/mainnet quotes and the integration guide. Creating and paying invoices still requires a funded testnet wallet and a deployed checkout contract.
+The demo is claimed by the repository owner on Vercel. It provides live testnet/mainnet quotes and the integration guide. Creating and paying invoices still requires a funded testnet wallet and a deployed checkout contract.
 
 **Status:** local contract/domain tests and live quote integration are implemented. No SaucerPay testnet deployment or payment evidence is bundled yet. See [validation results](docs/VALIDATION.md). Signing requires your own funded testnet account and deployment. The demo never substitutes a simulated price for a failed live quote.
 
