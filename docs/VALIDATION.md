@@ -4,6 +4,9 @@
 
 ## Bounty optimization — 2026-09-22
 
+- Public source `56e15734da4247f717f16869bc2f787c09410289` was freshly generated with the published Scaffold-HBAR CLI, installed, linted, tested, built and booted on port 3024. Its route smoke passed. [Source CI also passed](https://github.com/STOOOKEEE/hedera-temlate/actions/runs/35717199298).
+- The optimized frontend was deployed through the authenticated owner account as Vercel production deployment `dpl_3XCr7P9SUjrsYW1meFPWFG1EdXsr`. The permanent project domain is [saucerpay-hedera.vercel.app](https://saucerpay-hedera.vercel.app); the original project domain remains available.
+- The new domain was explicitly added to the project's production domains. Public HTTP checks confirm direct responses without Vercel authentication redirects. Browser checks on this public origin passed, including real quotes and mobile examples.
 - Lint/types, 19 shared-package tests and 11 contract tests pass (30 total).
 - Production build and smoke cover the workspace, examples, guide and invoice route.
 - The new preview endpoint returns real mainnet USDC and testnet SAUCE quotes.

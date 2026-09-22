@@ -51,8 +51,19 @@ before packaging them so they are included by `git ls-files`.
 Deploy that printed directory with an authenticated Vercel CLI:
 
 ```bash
+npx vercel@59.25.0 link --cwd /path/printed/by/the/script --project your-existing-project --yes
 npx vercel@59.25.0 deploy /path/printed/by/the/script --prod --yes
 ```
+
+For a new site, omit the link command and follow the project's creation flow.
+For an existing claimed demo, authenticate with `vercel login` and link its
+existing project; claiming the initial deployment does not authenticate this
+machine for subsequent publishes. Keep the same project to preserve its domains.
+
+If adding another `vercel.app` alias, add it to the project's production domains
+as well. An alias that is not a production domain can inherit Vercel's preview
+authentication and redirect visitors to login. Verify the public URL in a fresh
+browser context. `npm run smoke` rejects authentication redirects.
 
 Vercel CLI 59.25.0 also offers `deploy --temporary --yes` without an account.
 That mode builds locally and returns a public demo URL, an expiration timestamp

@@ -3,11 +3,16 @@ const origin = process.env.SMOKE_ORIGIN || "http://localhost:3000";
 for (const route of ["/", "/guide", "/examples", "/pay/0x" + "ab".repeat(32)]) {
   const response = await fetch(origin + route);
   assert.equal(
+    response.redirected,
+    false,
+    `${route} must be public without an authentication redirect`,
+  );
+  assert.equal(
     response.status,
     200,
     `${route} should boot without credentials`,
   );
-  assert.match(await response.text(), /saucerpay/i);
+  assert.match(await response.text(), /<title>SaucerPay/);
   console.log(`OK ${route}`);
 }
 const invalid = await fetch(origin + "/api/quote?network=invalid");

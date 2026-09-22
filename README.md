@@ -4,7 +4,7 @@
 
 A [Scaffold-HBAR](https://docs.hedera.com/solutions/tools/scaffold-hbar/index) template for payment links and checkout flows, using SaucerSwap liquidity. The invoice workspace demonstrates the pattern; the TypeScript package and Solidity contract are the parts you reuse.
 
-**[Open the live demo](https://temporary-express-mesa-bvkp923.vercel.app)** · **[Start locally](docs/GETTING_STARTED.md)** · **[Understand the flow](docs/ARCHITECTURE.md)** · **[Adapt it](docs/CUSTOMIZATION.md)**
+**[Open the live demo](https://saucerpay-hedera.vercel.app)** · **[Start locally](docs/GETTING_STARTED.md)** · **[Understand the flow](docs/ARCHITECTURE.md)** · **[Adapt it](docs/CUSTOMIZATION.md)**
 
 ![SaucerPay workspace showing a live SaucerSwap quote and the testnet setup state](docs/workspace.png)
 
@@ -85,7 +85,7 @@ A quote alone is not payment. Fulfill an order only after checking a successful 
 | Evaluate the template for the bounty                       | [Reviewer walkthrough](docs/REVIEW.md)     |
 | Work with a coding agent                                   | [AGENTS.md](AGENTS.md)                     |
 
-The [product examples](https://temporary-express-mesa-bvkp923.vercel.app/examples) use the same `QuotePreview` component for a service invoice and a prepaid-credit purchase. Quotes are read-only; your application supplies order persistence and fulfillment.
+The [product examples](https://saucerpay-hedera.vercel.app/examples) use the same `QuotePreview` component for a service invoice and a prepaid-credit purchase. Quotes are read-only; your application supplies order persistence and fulfillment.
 
 ## Where to change the code
 

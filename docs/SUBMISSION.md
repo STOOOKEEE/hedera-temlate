@@ -17,7 +17,7 @@ The reference checkout uses testnet SAUCE. The USDC preview reads actual mainnet
 ## Links to provide
 
 - Source: https://github.com/STOOOKEEE/hedera-temlate
-- Hosted demo: https://temporary-express-mesa-bvkp923.vercel.app
+- Hosted demo: https://saucerpay-hedera.vercel.app
 - Developer docs: [README navigation](../README.md#find-the-right-guide)
 - Architecture: [payment flow and units](ARCHITECTURE.md)
 - Testnet payment: **pending; insert only the actual verified HashScan/mirror link**
