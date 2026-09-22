@@ -6,7 +6,25 @@ This file distinguishes local checks, real protocol reads and actual transaction
 
 ## Local checks
 
-Initial implementation passed 11 Solidity contract tests and 8 TypeScript tests. Production Next.js build passed. Final lint/build/clean-scaffold results will be recorded after the repository delivery check.
+Validated on Node.js 22.23.2 and npm 10.9.8:
+
+| Check                                                       | Result                                                                                                                                 |
+| ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| ESLint + both TypeScript packages                           | Pass                                                                                                                                   |
+| Shared checkout tests                                       | 8 passing                                                                                                                              |
+| Solidity payment invariant tests                            | 11 passing                                                                                                                             |
+| Production Solidity + Next.js build                         | Pass                                                                                                                                   |
+| Production route smoke                                      | Pass: `/`, `/guide`, `/pay/<id>`, invalid-network API error                                                                            |
+| GitHub Actions source CI                                    | [Pass](https://github.com/STOOOKEEE/hedera-temlate/actions/runs/35672872909)                                                           |
+| Actual public external-template generation                  | Pass with `create-scaffold-hbar@0.4.0`                                                                                                 |
+| Fresh generated app install/lint/19 tests/build/start/smoke | Pass                                                                                                                                   |
+| Browser checks (Chromium)                                   | Pass: live testnet and mainnet quotes, disabled creation before deployment, guide navigation, undeployed-invoice error, no page errors |
+| Responsive check                                            | 1440px desktop and 390px mobile; no horizontal mobile overflow                                                                         |
+| Missing deployment key                                      | Clear failure before any transaction is submitted                                                                                      |
+
+The external-template validation downloaded `STOOOKEEE/hedera-temlate` from GitHub at implementation commit `51f9e4b`, installed dependencies through the published CLI and ran checks in `/tmp/saucerpay-fresh`. No local-template override was used. The CLI consumes `template.json`; that is expected behavior. Git author identity was supplied only for the isolated validation process.
+
+The upstream CLI rewrites some npm prose during generation. The README and app guide use the equivalent `npx create-scaffold-hbar@latest --template STOOOKEEE/hedera-temlate` entry point so their install commands remain valid in generated projects. The standard npm-create entry point was the one exercised during validation.
 
 Contract tests cover exact delivery, surplus refund, duplicate settlement, duplicate merchant references, merchant namespaces, cancellation authorization, expiry, maximum spend, under-delivery, withheld refunds, refund rejection and reentrancy. These use mock tokens/router and do not emulate HTS precompiles.
 

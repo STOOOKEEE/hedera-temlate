@@ -6,6 +6,8 @@ Build a checkout, marketplace purchase flow or invoice portal without reimplemen
 
 **Status:** local contract/domain tests and live quote integration are implemented. No SaucerPay testnet deployment or payment evidence is bundled yet. See [validation results](docs/VALIDATION.md). Signing requires your own funded testnet account and deployment. The demo never substitutes a simulated price for a failed live quote.
 
+![SaucerPay invoice workspace with a real read-only quote and deployment setup state](docs/workspace.png)
+
 ## Start in one command
 
 Use **Node.js 22+**, npm and Git with a configured author identity:
