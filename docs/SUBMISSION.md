@@ -54,7 +54,7 @@ npm run submission:check -- /path/to/saucerpay-receipt.json
 
 The preflight checks source metadata, tracked env-file names, configured contract immutables, invoice state, the successful matching payment event, the recorded amount and mirror-node success. Missing or unverifiable evidence results in a nonzero exit code. It does not replace a full secret scan, fresh-build tests, an audit or the organizer's eligibility validator.
 
-Before submitting, run the full fresh-scaffold checks in [Getting started](GETTING_STARTED.md), record the demo, and complete the official form and developer-experience survey. The public chain metadata is in [Validation](VALIDATION.md). No registration, submission or external outreach is automated here. This project has not used Hedera Harness.
+A fresh public scaffold has passed the checks in [Validation](VALIDATION.md#fresh-public-scaffold--2026-09-22); rerun them if the implementation changes. Before submitting, record the demo and complete the official form and developer-experience survey. The public chain metadata is in [Validation](VALIDATION.md). No registration, submission or external outreach is automated here. This project has not used Hedera Harness.
 
 ## Honest claim boundaries
 

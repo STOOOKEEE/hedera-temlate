@@ -18,7 +18,7 @@ Follow [Getting started](GETTING_STARTED.md) from an empty parent folder. The su
 npx create-scaffold-hbar@latest --template STOOOKEEE/hedera-temlate
 ```
 
-Then run lint, tests, build, start and smoke as documented. See [VALIDATION.md](VALIDATION.md) for the exact earlier source revision that was exercised through the public generator; an earlier pass is not a claim that every later commit was freshly scaffolded.
+Then run lint, tests, build, start and smoke as documented. [Validation](VALIDATION.md#fresh-public-scaffold--2026-09-22) records a fresh generator/install/test/build/boot pass for public source commit `57483b8`, which contains the live payment evidence and gas fix.
 
 ## 3. Inspect what is reusable
 

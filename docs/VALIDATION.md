@@ -32,11 +32,11 @@ result. Source lint and type checks, 20 TypeScript tests, 11 contract tests,
 and the production Solidity/Next.js build passed. `npm audit --omit=dev`
 reported no production vulnerabilities. The public Vercel API returned the
 same paid invoice, merchant, payer and amount. In Chromium, the paid page
-rendered without errors, the verified
-receipt download contained the matching merchant, payer, amount and hash, and
-`npm run submission:check -- /tmp/saucerpay-verified-receipt.json` passed on
-that browser-exported file. The 390px mobile page had no horizontal overflow.
-Production deployment `dpl_2h9AgobQdAPkpcWhZcDtfaUv28tm` is
+rendered without errors, and the verified receipt download contained the
+matching merchant, payer, amount and hash. The browser-exported file passed
+`npm run submission:check -- /tmp/saucerpay-verified-receipt.json`. The 390px
+mobile page had no horizontal overflow.
+Production deployment `dpl_J1KuY89MWRU6yAczLDd9W8kG7CHv` is
 live at [saucerpay-hedera.vercel.app](https://saucerpay-hedera.vercel.app);
 its page and API smoke checks passed. The private testnet keys remain only in
 ignored local env files, with no key on Vercel.
@@ -44,15 +44,31 @@ ignored local env files, with no key on Vercel.
 The first invoice submission failed with `INSUFFICIENT_GAS`: the mirror relay
 estimated `113,262` gas and the transaction exhausted exactly that limit.
 The script and wallet UI now send writes with a 2× gas-limit margin. Invoice
-creation and payments with one and then two accounts succeeded after that change. An
-EVM transfer to the initially absent payer account also exhausted its gas;
-a native Hedera SDK transfer created and funded that account successfully.
+creation and payments with one and then two accounts succeeded after that
+change. An EVM transfer to the initially absent payer account also exhausted
+its gas. A native Hedera SDK transfer created and funded that account successfully.
 These failed attempts incurred testnet fees but are not cited as payment proof.
 
 The signed payment was executed through the two-account script, and the hosted
 read/receipt/download flow was tested. Injected-wallet signing, mainnet signing
 and USDC settlement have **not** been exercised live. The
 contest entry and developer-experience survey have not been submitted.
+
+## Fresh public scaffold — 2026-09-22
+
+Public source commit [`57483b85056ad6181c4095a34f711ab5fe0bca96`](https://github.com/STOOOKEEE/hedera-temlate/commit/57483b85056ad6181c4095a34f711ab5fe0bca96)
+was generated into an empty `/tmp/saucerpay-fresh-live-57483b8` directory
+using `create-scaffold-hbar@0.4.0`, `--template STOOOKEEE/hedera-temlate`,
+Next.js, Hardhat, npm, testnet and `--skip-hedera-skills`. The CLI installed
+dependencies and initialized Git. No local template override or wallet key
+was supplied; `template.json` was consumed as expected and the root
+`AGENTS.md` remained available.
+
+The generated project passed lint, both TypeScript checks, **20 shared tests**,
+**11 contract tests**, Solidity compilation and the production Next.js build.
+It booted on port 3032 and passed the route smoke. The documented CLI example
+returned a real read-only quote for 1 testnet SAUCE. [GitHub Actions passed on
+that source commit](https://github.com/STOOOKEEE/hedera-temlate/actions/runs/35776567692).
 
 ## Bounty optimization before the live deployment — 2026-09-22
 
