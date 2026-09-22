@@ -1,0 +1,181 @@
+import { describe, expect, it, vi, afterEach } from "vitest";
+import { Interface } from "ethers";
+import {
+  entityAddress,
+  tokenUnits,
+  maximumSpend,
+  tinybarToRpcWei,
+  hbarDisplay,
+  networkConfig,
+  invoiceId,
+  paymentTransaction,
+  checkoutInterface,
+  verifyPaymentReceipt,
+  quotePayment,
+} from "../src/index";
+import type { Invoice, Quote } from "../src/index";
+
+const config = networkConfig("testnet", entityAddress("0.0.1234567"));
+const invoice: Invoice = {
+  id: invoiceId(entityAddress("0.0.100"), "0x" + "ab".repeat(32)),
+  merchant: entityAddress("0.0.100"),
+  amount: "1000000",
+  expiresAt: 2000,
+  status: "open",
+};
+const quote: Quote = {
+  amountOut: "1000000",
+  quotedTinybar: "101",
+  maximumTinybar: "102",
+  validUntil: 1060,
+  slippageBps: 50,
+  token: { symbol: "SAUCE", name: "Sauce", decimals: 6 },
+  invoice,
+};
+afterEach(() => vi.unstubAllGlobals());
+
+describe("money and transaction construction", () => {
+  it("keeps token precision and rejects ambiguous/out-of-range amounts", () => {
+    expect(tokenUnits("1.000001", 6)).toBe(1000001n);
+    for (const input of ["1.0000001", "-1", "1e6", "0", "90000000000000000000"])
+      expect(() => tokenUnits(input, 6)).toThrow();
+  });
+  it("rounds maximum input upward without floating-point loss", () => {
+    expect(maximumSpend(101n, 50)).toBe(102n);
+    expect(maximumSpend(10000n, 0)).toBe(10000n);
+    expect(() => maximumSpend(1n, 501)).toThrow();
+    expect(() => maximumSpend(1n, NaN)).toThrow();
+  });
+  it("converts tinybar only at the RPC boundary", () => {
+    expect(tinybarToRpcWei(100000000n)).toBe(10n ** 18n);
+    expect(hbarDisplay(123456789n)).toBe("1.23456789");
+    const transaction = paymentTransaction(config, quote, 1000);
+    expect(transaction.value).toBe(1020000000000n);
+    expect(
+      checkoutInterface.decodeFunctionData("payInvoice", transaction.data)[0],
+    ).toBe(invoice.id);
+  });
+  it("rejects stale quotes, mismatched invoice amounts and mainnet writes", () => {
+    expect(() => paymentTransaction(config, quote, 1060)).toThrow(/Refresh/);
+    expect(() =>
+      paymentTransaction(config, { ...quote, amountOut: "3" }, 1000),
+    ).toThrow(/terms/);
+    expect(() =>
+      paymentTransaction(config, { ...quote, maximumTinybar: "9999" }, 1000),
+    ).toThrow(/terms/);
+    expect(() =>
+      paymentTransaction(
+        networkConfig("mainnet", config.checkout!),
+        quote,
+        1000,
+      ),
+    ).toThrow(/testnet/);
+  });
+  it("validates entity numbers without coercing account aliases", () => {
+    expect(entityAddress("0.0.19264").toLowerCase()).toBe(
+      "0x0000000000000000000000000000000000004b40",
+    );
+    for (const id of ["1.0.1", "0.0.0", "0.0.-1", "abc"])
+      expect(() => entityAddress(id)).toThrow();
+  });
+});
+
+describe("receipt verification", () => {
+  function receipt(merchant = invoice.merchant, amount = 1000000n) {
+    const event = checkoutInterface.encodeEventLog(
+      checkoutInterface.getEvent("InvoicePaid")!,
+      [invoice.id, entityAddress("0.0.101"), merchant, amount, 80n, 20n],
+    );
+    return {
+      status: 1,
+      to: config.checkout,
+      logs: [{ address: config.checkout!, ...event }],
+    };
+  }
+  it("requires a matching event from the configured checkout", () => {
+    expect(verifyPaymentReceipt(config, invoice, receipt()).spentTinybar).toBe(
+      "80",
+    );
+    expect(() =>
+      verifyPaymentReceipt(config, invoice, { ...receipt(), status: 0 }),
+    ).toThrow();
+    expect(() =>
+      verifyPaymentReceipt(config, invoice, {
+        ...receipt(),
+        logs: [{ ...receipt().logs[0], address: entityAddress("0.0.999") }],
+      }),
+    ).toThrow();
+    expect(() =>
+      verifyPaymentReceipt(config, invoice, receipt(entityAddress("0.0.999"))),
+    ).toThrow();
+    expect(() =>
+      verifyPaymentReceipt(config, invoice, receipt(invoice.merchant, 999n)),
+    ).toThrow();
+  });
+});
+
+describe("live integration boundary", () => {
+  it("constructs the direct WHBAR route and uses router amounts, without invented prices", async () => {
+    const abi = new Interface([
+      "function getAmountsIn(uint256,address[]) view returns (uint256[])",
+    ]);
+    const fetcher = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            symbol: "SAUCE",
+            name: "Sauce",
+            decimals: "6",
+            type: "FUNGIBLE_COMMON",
+            deleted: false,
+            custom_fees: {},
+          }),
+        ),
+      )
+      .mockImplementationOnce(async (_url, init) => {
+        const body = JSON.parse(init.body);
+        const args = abi.decodeFunctionData(
+          "getAmountsIn",
+          body.params[0].data,
+        );
+        expect(args[0]).toBe(1000000n);
+        expect([...args[1]]).toEqual([config.whbar, config.token]);
+        return new Response(
+          JSON.stringify({
+            result: abi.encodeFunctionResult("getAmountsIn", [
+              [101n, 1000000n],
+            ]),
+          }),
+        );
+      });
+    vi.stubGlobal("fetch", fetcher);
+    const result = await quotePayment(config, { amount: "1", slippageBps: 50 });
+    expect(result.quotedTinybar).toBe("101");
+    expect(result.maximumTinybar).toBe("102");
+  });
+  it("fails explicitly on endpoint failure or transfer-fee tokens", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("offline")));
+    await expect(
+      quotePayment(config, { amount: "1", slippageBps: 50 }),
+    ).rejects.toThrow(/unavailable/);
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValue(
+          new Response(
+            JSON.stringify({
+              symbol: "X",
+              decimals: "6",
+              type: "FUNGIBLE_COMMON",
+              custom_fees: { fixed_fees: [{}] },
+            }),
+          ),
+        ),
+    );
+    await expect(
+      quotePayment(config, { amount: "1", slippageBps: 50 }),
+    ).rejects.toThrow(/fees/);
+  });
+});

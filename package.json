@@ -1,0 +1,40 @@
+{
+  "name": "saucerpay-template",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "workspaces": [
+    "packages/checkout",
+    "packages/hardhat",
+    "packages/nextjs"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w @saucerpay/nextjs",
+    "start": "npm run start -w @saucerpay/nextjs",
+    "build": "npm run compile -w @saucerpay/contracts && npm run build -w @saucerpay/nextjs",
+    "lint": "eslint . && npm run typecheck -w @saucerpay/checkout && npm run typecheck -w @saucerpay/nextjs",
+    "test": "npm run test -w @saucerpay/checkout && npm run test -w @saucerpay/contracts",
+    "hardhat:compile": "npm run compile -w @saucerpay/contracts",
+    "hardhat:deploy": "npm run deploy -w @saucerpay/contracts --",
+    "next:start": "npm run dev -w @saucerpay/nextjs",
+    "next:build": "npm run build -w @saucerpay/nextjs",
+    "probe": "tsx scripts/probe.ts",
+    "smoke": "node scripts/smoke.mjs",
+    "check": "npm run lint && npm test && npm run build",
+    "testnet:payment": "npm run testnet:payment -w @saucerpay/contracts",
+    "format": "prettier --write \"**/*.{ts,tsx,js,cjs,mjs,json,md,css,yml}\""
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.1",
+    "@types/node": "22.19.1",
+    "eslint": "9.39.1",
+    "prettier": "3.7.4",
+    "tsx": "4.21.0",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.48.1"
+  },
+  "type": "module"
+}

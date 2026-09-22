@@ -1,0 +1,38 @@
+{
+  "name": "saucerpay",
+  "description": "Exact-amount HTS checkout paid in HBAR through SaucerSwap, with atomic invoice settlement.",
+  "version": "0.1.0",
+  "create-scaffold-hbar": {
+    "capabilities": {
+      "frontend": ["nextjs-app"],
+      "solidityFramework": ["hardhat"],
+      "packageManager": ["npm"]
+    },
+    "defaults": {
+      "frontend": "nextjs-app",
+      "solidityFramework": "hardhat",
+      "packageManager": "npm"
+    },
+    "requirements": {
+      "node": ">=22.0.0"
+    },
+    "outro": {
+      "sections": [
+        {
+          "title": "Run SaucerPay",
+          "steps": [
+            {
+              "command": "{run:dev}"
+            },
+            {
+              "url": "http://localhost:3000"
+            },
+            {
+              "text": "Live quotes work without a key. Read README.md to deploy the checkout contract on testnet."
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

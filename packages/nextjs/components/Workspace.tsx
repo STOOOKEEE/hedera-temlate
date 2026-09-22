@@ -1,0 +1,494 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { Contract, hexlify, randomBytes, formatUnits } from "ethers";
+import {
+  CHECKOUT_ABI,
+  hbarDisplay,
+  invoiceId,
+  tokenUnits,
+  type CheckoutConfig,
+  type TokenInfo,
+  type Quote,
+} from "@saucerpay/checkout";
+import { api, connectWallet, message, shortAddress } from "@/lib/wallet";
+
+type Settings = { config: CheckoutConfig; token: TokenInfo };
+type Created = { id: string; amount: string; symbol: string; hash: string };
+
+export function Workspace() {
+  const [settings, setSettings] = useState<Settings | null>(null);
+  const [configError, setConfigError] = useState("");
+  const [address, setAddress] = useState("");
+  const [amount, setAmount] = useState("10");
+  const [expiry, setExpiry] = useState("24");
+  const [busy, setBusy] = useState("");
+  const [notice, setNotice] = useState("");
+  const [error, setError] = useState("");
+  const [created, setCreated] = useState<Created[]>([]);
+  const [previewAmount, setPreviewAmount] = useState("10");
+  const [previewNetwork, setPreviewNetwork] = useState("testnet");
+  const [quote, setQuote] = useState<Quote | null>(null);
+  const [quoteError, setQuoteError] = useState("");
+  const [quoting, setQuoting] = useState(false);
+
+  async function loadSettings() {
+    setConfigError("");
+    try {
+      setSettings(await api<Settings>("/api/config"));
+    } catch (error) {
+      setConfigError(message(error));
+    }
+  }
+  useEffect(() => {
+    void loadSettings();
+  }, []);
+
+  async function run(action: string, work: () => Promise<void>) {
+    setBusy(action);
+    setError("");
+    setNotice("");
+    try {
+      await work();
+    } catch (error) {
+      setError(message(error));
+    } finally {
+      setBusy("");
+    }
+  }
+  async function wallet() {
+    if (!settings) throw new Error("Wait for the network configuration.");
+    const connected = await connectWallet(settings.config);
+    setAddress(connected.address);
+    return connected;
+  }
+  async function associate() {
+    if (!settings) return;
+    const { signer } = await wallet();
+    const token = new Contract(
+      settings.config.token,
+      ["function associate() returns (int64)"],
+      signer,
+    );
+    const code = await token.associate.staticCall();
+    if (code === 194n) {
+      setNotice("This wallet is already associated with the settlement token.");
+      return;
+    }
+    if (code !== 22n)
+      throw new Error(`Hedera refused token association (response ${code}).`);
+    const tx = await token.associate();
+    const receipt = await tx.wait();
+    if (!receipt || receipt.status !== 1)
+      throw new Error("Association was not confirmed.");
+    setNotice(
+      "Association submitted successfully. Allow a few seconds for mirror indexing before creating an invoice.",
+    );
+  }
+  async function create() {
+    if (!settings?.config.checkout)
+      throw new Error("Deploy the checkout contract first.");
+    const { signer, address: merchant } = await wallet();
+    await api(`/api/preflight?merchant=${merchant}`);
+    const units = tokenUnits(amount, settings.token.decimals);
+    const hours = Number(expiry);
+    if (!Number.isInteger(hours) || hours < 1 || hours > 720)
+      throw new Error("Expiry must be between 1 and 720 hours.");
+    const reference = hexlify(randomBytes(32));
+    const contract = new Contract(
+      settings.config.checkout,
+      CHECKOUT_ABI,
+      signer,
+    );
+    const tx = await contract.createInvoice(
+      reference,
+      units,
+      Math.floor(Date.now() / 1000) + hours * 3600,
+    );
+    setNotice("Creating your invoice on Hedera testnet…");
+    const receipt = await tx.wait();
+    if (!receipt || receipt.status !== 1)
+      throw new Error("Invoice creation was not confirmed.");
+    const id = invoiceId(merchant, reference);
+    setCreated((list) => [
+      {
+        id,
+        amount: formatUnits(units, settings.token.decimals),
+        symbol: settings.token.symbol,
+        hash: receipt.hash,
+      },
+      ...list,
+    ]);
+    setNotice("Invoice created. Open it and copy the payment link to share.");
+  }
+  async function preview() {
+    setQuoting(true);
+    setQuoteError("");
+    setQuote(null);
+    try {
+      const data = await api<{ quote: Quote }>(
+        `/api/quote?network=${previewNetwork}&amount=${encodeURIComponent(previewAmount)}&slippageBps=50`,
+      );
+      setQuote(data.quote);
+    } catch (error) {
+      setQuoteError(message(error));
+    } finally {
+      setQuoting(false);
+    }
+  }
+
+  return (
+    <div className="workspace">
+      <div className="page-heading">
+        <div>
+          <p className="eyebrow">
+            <span className="live-dot" /> Payments, without the token mismatch
+          </p>
+          <h1>
+            Your invoice.
+            <br />
+            <span>Their HBAR.</span>
+          </h1>
+          <p className="lead">
+            Request an exact token amount. Let your customer pay in HBAR.
+            <br className="desktop-break" /> SaucerSwap handles the conversion
+            in the same payment.
+          </p>
+        </div>
+        <div className="heading-note">
+          <span className="small-label">ONE TRANSACTION</span>
+          <span className="large-arrow">↗</span>
+          <p>
+            Convert. Settle.
+            <br />
+            Return the difference.
+          </p>
+        </div>
+      </div>
+      <div className="flow-strip">
+        <span>
+          <b>01</b> Create an invoice
+        </span>
+        <i>→</i>
+        <span>
+          <b>02</b> Pay in HBAR
+        </span>
+        <i>→</i>
+        <span>
+          <b>03</b> Receive exact tokens
+        </span>
+        <span className="network-pill">Hedera testnet</span>
+      </div>
+      <div className="workspace-grid">
+        <section className="panel invoice-panel">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">Merchant workspace</p>
+              <h2>Create an invoice</h2>
+            </div>
+            <span className="icon-square">↗</span>
+          </div>
+          <p className="muted">
+            The amount and recipient are fixed on-chain when you create the
+            invoice.
+          </p>
+          {configError && (
+            <div className="alert error" role="alert">
+              {configError}{" "}
+              <button
+                className="text-button"
+                onClick={() => void loadSettings()}
+              >
+                Retry
+              </button>
+            </div>
+          )}
+          {settings && !settings.config.checkout && (
+            <div className="setup-note">
+              <span className="setup-symbol">i</span>
+              <div>
+                <strong>Ready to explore. Deploy to accept payments.</strong>
+                <p>
+                  Live quotes are available now.{" "}
+                  <Link href="/guide">Set up your testnet checkout →</Link>
+                </p>
+              </div>
+            </div>
+          )}
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              void run("create", create);
+            }}
+          >
+            <label htmlFor="amount">Amount to receive</label>
+            <div className="amount-input">
+              <input
+                id="amount"
+                inputMode="decimal"
+                value={amount}
+                onChange={(event) => setAmount(event.target.value)}
+                required
+                autoComplete="off"
+              />
+              <span>{settings?.token.symbol || "HTS"}</span>
+            </div>
+            <div className="field-row">
+              <div>
+                <label htmlFor="settlement-token">Settlement token</label>
+                <div id="settlement-token" className="read-field">
+                  <span className="token-symbol">S</span>
+                  {settings?.token.name || "Loading token…"}
+                  <small>{settings?.config.tokenId}</small>
+                </div>
+              </div>
+              <div>
+                <label htmlFor="expiry">Expires in</label>
+                <select
+                  id="expiry"
+                  value={expiry}
+                  onChange={(event) => setExpiry(event.target.value)}
+                >
+                  <option value="1">1 hour</option>
+                  <option value="24">24 hours</option>
+                  <option value="168">7 days</option>
+                  <option value="720">30 days</option>
+                </select>
+              </div>
+            </div>
+            <div className="recipient-row">
+              <div>
+                <span className="small-label">RECIPIENT</span>
+                <p title={address}>
+                  {address ? shortAddress(address) : "Your connected wallet"}
+                </p>
+              </div>
+              <button
+                type="button"
+                className="button secondary small"
+                disabled={
+                  !!busy || !settings || settings.config.network !== "testnet"
+                }
+                onClick={() =>
+                  void run("connect", async () => {
+                    await wallet();
+                  })
+                }
+              >
+                {busy === "connect"
+                  ? "Connecting…"
+                  : address
+                    ? "Change wallet"
+                    : "Connect wallet"}
+              </button>
+            </div>
+            <button
+              className="button primary full"
+              type="submit"
+              disabled={
+                !!busy ||
+                !settings?.config.checkout ||
+                settings.config.network !== "testnet"
+              }
+            >
+              {busy === "create" ? "Confirm in wallet…" : "Create payment link"}{" "}
+              <span>→</span>
+            </button>
+            <button
+              type="button"
+              className="text-button associate"
+              disabled={
+                !!busy || !settings || settings.config.network !== "testnet"
+              }
+              onClick={() => void run("associate", associate)}
+            >
+              {busy === "associate"
+                ? "Associating…"
+                : "First payment? Associate the settlement token"}
+            </button>
+          </form>
+          {error && (
+            <div className="alert error" role="alert">
+              {error}
+            </div>
+          )}
+          {notice && (
+            <div className="alert success" role="status">
+              {notice}
+            </div>
+          )}
+        </section>
+        <aside className="preview-column">
+          <section className="quote-panel">
+            <div className="section-heading">
+              <p className="eyebrow">Try the conversion</p>
+              <span className="read-only">READ ONLY</span>
+            </div>
+            <h2>
+              Real liquidity.
+              <br />
+              No wallet needed.
+            </h2>
+            <p>Read a live quote from SaucerSwap. No payment is sent.</p>
+            <form
+              onSubmit={(event) => {
+                event.preventDefault();
+                void preview();
+              }}
+            >
+              <label htmlFor="quote-network">Network</label>
+              <select
+                id="quote-network"
+                value={previewNetwork}
+                onChange={(event) => {
+                  setPreviewNetwork(event.target.value);
+                  setQuote(null);
+                  setQuoteError("");
+                }}
+                disabled={quoting}
+              >
+                <option value="testnet">Hedera testnet</option>
+                <option value="mainnet">Hedera mainnet · read only</option>
+              </select>
+              <label htmlFor="preview-amount">Requested token amount</label>
+              <div className="preview-input">
+                <input
+                  id="preview-amount"
+                  inputMode="decimal"
+                  value={previewAmount}
+                  onChange={(event) => {
+                    setPreviewAmount(event.target.value);
+                    setQuote(null);
+                  }}
+                  disabled={quoting}
+                  required
+                />
+                <span>SAUCE*</span>
+              </div>
+              <button
+                type="submit"
+                className="button quote-button full"
+                disabled={quoting}
+              >
+                {quoting ? "Reading the pool…" : "Get live quote"}{" "}
+                <span>↗</span>
+              </button>
+            </form>
+            {quote && (
+              <div className="quote-result" role="status">
+                <span>
+                  For{" "}
+                  {formatUnits(BigInt(quote.amountOut), quote.token.decimals)}{" "}
+                  {quote.token.symbol}
+                </span>
+                <strong>
+                  {hbarDisplay(BigInt(quote.quotedTinybar))} <small>HBAR</small>
+                </strong>
+                <p>
+                  Maximum {hbarDisplay(BigInt(quote.maximumTinybar))} HBAR ·
+                  0.5% tolerance
+                </p>
+                <small>
+                  Snapshot taken at{" "}
+                  {new Date(
+                    (quote.validUntil - 60) * 1000,
+                  ).toLocaleTimeString()}
+                  . Network fees are additional.
+                </small>
+              </div>
+            )}
+            {quoteError && (
+              <div className="alert quote-error" role="alert">
+                {quoteError}
+              </div>
+            )}
+            <p className="quote-footnote">
+              *Default settlement token. A configured deployment can use another
+              supported HTS token. Pool availability can differ by network.
+            </p>
+          </section>
+          <div className="template-note">
+            <span className="code-icon">{"</>"}</span>
+            <div>
+              <strong>Built to be your starting point.</strong>
+              <p>Keep the payment module. Make the experience yours.</p>
+              <Link href="/guide">Explore the integration guide →</Link>
+            </div>
+          </div>
+        </aside>
+      </div>
+      <section className="activity">
+        <div className="section-heading">
+          <h2>Your session invoices</h2>
+          <span className="muted">{created.length} created</span>
+        </div>
+        {created.length ? (
+          <div className="invoice-list">
+            {created.map((item) => (
+              <div className="invoice-row" key={item.id}>
+                <span className="invoice-icon">↗</span>
+                <div>
+                  <strong>
+                    {item.amount} {item.symbol}
+                  </strong>
+                  <small title={item.id}>{shortAddress(item.id)}</small>
+                </div>
+                <a
+                  href={`https://hashscan.io/testnet/transaction/${item.hash}`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Transaction ↗
+                </a>
+                <Link
+                  className="button secondary small"
+                  href={`/pay/${item.id}`}
+                >
+                  Open invoice →
+                </Link>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="empty-state">
+            <span>▤</span>
+            <div>
+              <strong>Your first invoice starts here.</strong>
+              <p>
+                Created invoices appear here during this session. Save each
+                payment link; invoice terms stay on-chain.
+              </p>
+            </div>
+          </div>
+        )}
+      </section>
+      <section className="benefits">
+        <div>
+          <span>01 / EXACT DELIVERY</span>
+          <h3>The amount you asked for.</h3>
+          <p>
+            The contract checks the merchant’s token balance increase before
+            recording payment.
+          </p>
+        </div>
+        <div>
+          <span>02 / BOUNDED SPEND</span>
+          <h3>A ceiling, not a guess.</h3>
+          <p>
+            The payer sets a maximum HBAR spend. Unused HBAR is returned in the
+            same transaction.
+          </p>
+        </div>
+        <div>
+          <span>03 / VERIFIABLE RECEIPT</span>
+          <h3>One invoice. One settlement.</h3>
+          <p>
+            A successful contract event ties the payment to the invoice, payer
+            and merchant.
+          </p>
+        </div>
+      </section>
+    </div>
+  );
+}
