@@ -4,11 +4,17 @@
 
 Build a checkout, marketplace purchase flow or invoice portal without reimplementing quotes, Hedera units, token association checks, exact settlement, refunds and receipt verification. The included invoice workspace is a reference consumer of the reusable `@saucerpay/checkout` package.
 
+## Try the live demo
+
+**[Open SaucerPay on Vercel](https://temporary-express-mesa-bvkp923.vercel.app)** — no installation, account or private key required to explore real SaucerSwap quotes.
+
+The initial Vercel deployment is temporary and expires on **September 22, 2026 at 10:59 UTC** unless the owner claims it. It provides live testnet/mainnet quotes and the integration guide. Creating and paying invoices still requires a funded testnet wallet and a deployed checkout contract.
+
 **Status:** local contract/domain tests and live quote integration are implemented. No SaucerPay testnet deployment or payment evidence is bundled yet. See [validation results](docs/VALIDATION.md). Signing requires your own funded testnet account and deployment. The demo never substitutes a simulated price for a failed live quote.
 
 ![SaucerPay invoice workspace with a real read-only quote and deployment setup state](docs/workspace.png)
 
-## Start in one command
+## Build your own app in one command
 
 Use **Node.js 22+**, npm and Git with a configured author identity:
 
@@ -34,7 +40,7 @@ npm ci
 npm run dev
 ```
 
-The repository name `hedera-temlate` is intentional in these commands: it matches the supplied GitHub repository.
+To host your own public instance, see [Deploy the web app to Vercel](docs/HOSTING.md).
 
 ## The reusable capability
 

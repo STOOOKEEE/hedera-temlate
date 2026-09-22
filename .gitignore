@@ -11,3 +11,4 @@ coverage/
 deployments/
 playwright-report/
 test-results/
+.vercel/

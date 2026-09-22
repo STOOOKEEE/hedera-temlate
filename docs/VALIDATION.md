@@ -41,6 +41,26 @@ Observed 2026-09-22, using real `getAmountsIn` calls with one SAUCE as the reque
 
 These are historical diagnostic observations, not prices promised by the app. Run `npm run probe` for a new observation. No transaction was submitted by these reads.
 
+## Public Vercel demo
+
+Published on 2026-09-22 at
+https://temporary-express-mesa-bvkp923.vercel.app using Vercel CLI 59.25.0.
+Vercel reported deployment `dpl_7iBBcrpFhNJQLM7Rzmod85butvho` as `READY`.
+This anonymous deployment expires at **2026-09-22 10:59 UTC** unless claimed
+by its owner. The private claim URL is intentionally excluded from this repo.
+
+Verified against the public HTTPS origin:
+
+- Page smoke: homepage, guide, invoice route and invalid-network error passed.
+- Live quote API returned real testnet and mainnet quotes for 25 SAUCE.
+- Chromium completed both quote flows and guide navigation without page errors.
+- Mobile viewport at 390px had no horizontal overflow.
+- Invoice writes stayed disabled while no checkout contract was configured.
+- The packaged frontend built successfully with Vercel's Next.js adapter.
+
+Source lint, all 19 tests and the monorepo production build also passed after
+adding the hosting preparation script. Hosting setup is documented in HOSTING.md.
+
 ## Testnet writes: pending user setup
 
 The user has no configured funded testnet account yet and requested deployment preparation/instructions. Therefore:
