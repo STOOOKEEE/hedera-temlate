@@ -50,6 +50,16 @@ export class CheckoutError extends Error {
   }
 }
 
+/** Hedera mirror-node estimates may be too tight for submitted writes. */
+export function bufferedGasLimit(estimate: bigint): bigint {
+  if (estimate <= 0n)
+    throw new CheckoutError(
+      "INVALID_GAS_ESTIMATE",
+      "Cannot estimate transaction gas.",
+    );
+  return estimate * 2n;
+}
+
 export function entityAddress(id: string): string {
   const match = /^0\.0\.(\d+)$/.exec(id);
   if (!match || BigInt(match[1]) <= 0n || BigInt(match[1]) > (1n << 64n) - 1n)

@@ -15,7 +15,7 @@ Start with the error code or text. Keep network, token ID, contract address and 
 | App opens on a different port                | Port 3000 is occupied                      | Use the address Next.js printed; set `SMOKE_ORIGIN` to the same origin when testing                         |
 | Production build not found                   | `npm start` was run before build           | Run `npm run build`, then `npm start`                                                                       |
 | Blank/unavailable quote, but tests pass      | Public endpoint or pool problem            | Try `npm run probe`; inspect each network result and the browser error. Local tests use mocks               |
-| Create button is disabled                    | No checkout configured or mainnet mode     | Follow Deployment; a quote-only demo deliberately has no payment contract                                   |
+| Create button is disabled                    | No checkout configured or mainnet mode     | Follow Deployment for a fresh scaffold; the hosted reference has a testnet checkout configured              |
 
 ## Configuration, token and quote errors
 
@@ -56,6 +56,7 @@ For custom-token configuration, use the app API: `npm run probe` always probes t
 - **Wrong chain:** switch to Hedera testnet (296 / `0x128`). The built-in connector offers to add it. Previewing mainnet prices does not switch the wallet.
 - **Invalid key:** Hardhat requires a raw 32-byte ECDSA secp256k1 key with `0x` prefix. ED25519 and DER-encoded SDK keys are different formats. Do not truncate them by guessing.
 - **Insufficient HBAR:** merchant needs fees for association/creation; payer needs the maximum conversion spend **plus** network fees. A reverted transaction may still consume fees.
+- **`INSUFFICIENT_GAS` after wallet submission:** inspect the actual HashScan/mirror receipt. A live invoice creation exhausted Hedera's unbuffered `113,262`-gas estimate. Current script and UI double the estimate for writes; update an older copy before retrying a still-open action. Failed transactions may consume network fees.
 - **Smoke cap exceeded:** the optional payment script stops before association/creation if its conversion quote exceeds `MAX_TESTNET_HBAR`. Review the requested asset and quote before changing that cap.
 - **Constructor `InvalidConfiguration`:** check router/token deployed code, distinct token/WHBAR addresses and network. Do not replace the router with an arbitrary address.
 

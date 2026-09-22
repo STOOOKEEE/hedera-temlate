@@ -2,10 +2,19 @@ const { ethers } = require("hardhat");
 const { readFile, writeFile } = require("node:fs/promises");
 const path = require("node:path");
 
+async function gasLimit(method, ...args) {
+  // Hedera gas estimates can be too tight for writes. The first
+  // live invoice creation exhausted exactly its 113262-gas estimate.
+  return (await method.estimateGas(...args)) * 2n;
+}
+
 async function main() {
   const [signer] = await ethers.getSigners();
   if (!signer || (await ethers.provider.getNetwork()).chainId !== 296n)
     throw new Error("Configure a funded testnet ECDSA key first.");
+  const payer = process.env.HEDERA_PAYER_PRIVATE_KEY
+    ? new ethers.Wallet(process.env.HEDERA_PAYER_PRIVATE_KEY, ethers.provider)
+    : signer;
   const directory = path.join(__dirname, "../../../deployments");
   const deployment = JSON.parse(
     await readFile(path.join(directory, "testnet.json"), "utf8"),
@@ -51,19 +60,37 @@ async function main() {
       "Quote exceeds MAX_TESTNET_HBAR; no transactions submitted.",
     );
   const association = await token.associate.staticCall();
-  if (association === 22n) await (await token.associate()).wait();
+  if (association === 22n)
+    await (
+      await token.associate({ gasLimit: await gasLimit(token.associate) })
+    ).wait();
   else if (association !== 194n)
     throw new Error(`Token association refused: ${association}`);
   const invoiceReference = ethers.hexlify(ethers.randomBytes(32));
   const expires = Math.floor(Date.now() / 1000) + 600;
   const creation = await (
-    await checkout.createInvoice(invoiceReference, amount, expires)
+    await checkout.createInvoice(invoiceReference, amount, expires, {
+      gasLimit: await gasLimit(
+        checkout.createInvoice,
+        invoiceReference,
+        amount,
+        expires,
+      ),
+    })
   ).wait();
+  if (!creation || creation.status !== 1)
+    throw new Error("Invoice creation was not confirmed.");
   const id = await checkout.invoiceId(signer.address, invoiceReference);
   const before = await token.balanceOf(signer.address);
+  const deadline = Math.floor(Date.now() / 1000) + 180;
+  const value = maximumTinybar * 10000000000n;
+  const payerCheckout = checkout.connect(payer);
   const receipt = await (
-    await checkout.payInvoice(id, Math.floor(Date.now() / 1000) + 60, {
-      value: maximumTinybar * 10000000000n,
+    await payerCheckout.payInvoice(id, deadline, {
+      value,
+      gasLimit: await gasLimit(payerCheckout.payInvoice, id, deadline, {
+        value,
+      }),
     })
   ).wait();
   if (
@@ -83,13 +110,20 @@ async function main() {
         return null;
       }
     })
-    .find((log) => log?.name === "InvoicePaid" && log.args.id === id);
+    .find(
+      (log) =>
+        log?.name === "InvoicePaid" &&
+        log.args.id === id &&
+        log.args.merchant.toLowerCase() === signer.address.toLowerCase() &&
+        log.args.payer.toLowerCase() === payer.address.toLowerCase(),
+    );
   if (!event) throw new Error("Matching payment event is missing.");
   const evidence = {
     network: "testnet",
     checkout: deployment.checkout,
     invoiceId: id,
-    merchantAndPayer: signer.address,
+    merchant: signer.address,
+    payer: payer.address,
     tokenId: deployment.tokenId,
     amountOut: amount.toString(),
     spentTinybar: event.args.spentTinybar.toString(),
@@ -99,7 +133,10 @@ async function main() {
     hashscan: `https://hashscan.io/testnet/transaction/${receipt.hash}`,
     mirror: `https://testnet.mirrornode.hedera.com/api/v1/contracts/results/${receipt.hash}`,
     timestamp: new Date().toISOString(),
-    note: "This smoke run uses one account as both merchant and payer. Test the two-wallet UI flow separately.",
+    note:
+      payer.address === signer.address
+        ? "This smoke run uses one account as both merchant and payer. Test the two-wallet UI flow separately."
+        : "This smoke run uses separate merchant and payer accounts. Test the injected-wallet UI flow separately.",
   };
   await writeFile(
     path.join(directory, "payment-evidence.json"),

@@ -10,13 +10,13 @@ A [Scaffold-HBAR](https://docs.hedera.com/solutions/tools/scaffold-hbar/index) t
 
 ## What can I try now?
 
-| Capability                                                  | Available                                                      |
-| ----------------------------------------------------------- | -------------------------------------------------------------- |
-| Open the hosted app and request real testnet/mainnet quotes | Yes — no installation or wallet                                |
-| Install, run tests, build and explore the source            | Yes — no key required                                          |
-| Create, cancel and pay invoices on testnet                  | Implemented; requires your funded wallet and deployed checkout |
-| Inspect a published SaucerPay payment transaction           | Not yet — testnet evidence is pending                          |
-| Pay invoices on mainnet                                     | Not enabled in this template                                   |
+| Capability                                                  | Available                                                                                                                                 |
+| ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Open the hosted app and request real testnet/mainnet quotes | Yes — no installation or wallet                                                                                                           |
+| Install, run tests, build and explore the source            | Yes — no key required                                                                                                                     |
+| Create, cancel and pay invoices on testnet                  | Live checkout deployed; writes require a funded EVM wallet                                                                                |
+| Inspect a published SaucerPay payment transaction           | [Verified two-wallet payment](https://hashscan.io/testnet/transaction/0xd9d3d092b020d8d0e05825f7636f1be6085d3e935a18d2286d4a5448f42a85d1) |
+| Pay invoices on mainnet                                     | Not enabled in this template                                                                                                              |
 
 The example receives **SAUCE**, not dollars. It is a convenient testnet asset, not a stablecoin. The USDC preview reads real mainnet liquidity; USDC settlement is still an adaptation requiring deployment and payment validation. [Validation record](docs/VALIDATION.md).
 
@@ -109,12 +109,12 @@ npm test
 npm run build
 ```
 
-In two terminals, run `npm start` and then `npm run smoke`. Use `npm run probe` for real read-only quotes. The current suite has 19 TypeScript tests and 11 contract tests; local contract tests use mocks, not Hedera precompiles. [Exact evidence and remaining checks](docs/VALIDATION.md).
+In two terminals, run `npm start` and then `npm run smoke`. Use `npm run probe` for real read-only quotes. The current suite has 20 TypeScript tests and 11 contract tests; local contract tests use mocks, not Hedera precompiles. [Exact evidence and remaining checks](docs/VALIDATION.md).
 
 ## Scope and license
 
 One configured fungible HTS token per deployment, without custom transfer fees, reached through a direct SaucerSwap V1 WHBAR pool. The example uses an injected EVM wallet such as MetaMask; HashPack/WalletConnect is not integrated. Invoice history in the workspace is temporary browser state. A production order database, credit ledger, subscription scheduler and fulfillment system are application extensions.
 
-The contract is unaudited. Mainnet signing is disabled in the reference flow. **A genuine testnet transaction is still needed before the bounty submission is complete.**
+The contract is unaudited. Mainnet signing is disabled in the reference flow. A [testnet deployment and two-wallet payment](docs/VALIDATION.md#live-testnet-deployment-and-payment--2026-09-22) are verified; the contest entry has not been submitted.
 
 [MIT](LICENSE). Protocol references and design decisions are linked in [Architecture](docs/ARCHITECTURE.md); the original implementation plan is in [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md).

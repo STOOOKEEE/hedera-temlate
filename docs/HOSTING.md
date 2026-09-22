@@ -33,6 +33,12 @@ Optional server-side variables are `HEDERA_NETWORK`, `HEDERA_TOKEN_ID` and
 `HEDERA_CHECKOUT_ADDRESS`. Mainnet remains read-only in the reference UI.
 Never upload `HEDERA_PRIVATE_KEY` or the Hardhat `.env` to Vercel.
 
+The current public site sets these three variables for Hedera testnet, SAUCE
+`0.0.1183558` and the [verified checkout](VALIDATION.md#live-testnet-deployment-and-payment--2026-09-22).
+Its [paid invoice](https://saucerpay-hedera.vercel.app/pay/0x8f97d7a7c61394e9f927e2b0d9d7b62fc396d091cfffc0475ab3b13493b58e61?tx=0xd9d3d092b020d8d0e05825f7636f1be6085d3e935a18d2286d4a5448f42a85d1)
+can be inspected without a wallet. The deployer and payer keys were not
+uploaded to Vercel.
+
 ## Package the demo for a CLI deployment
 
 For hosts that expect Next.js at the upload root, the repository includes a

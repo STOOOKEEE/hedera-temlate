@@ -2,7 +2,7 @@
 
 [README](../README.md) · Before this: [first run](GETTING_STARTED.md) · [Troubleshooting](TROUBLESHOOTING.md)
 
-**Outcome:** deploy your checkout, receive a token payment from HBAR, and retain genuine transaction evidence. The commands are prepared, but no successful SaucerPay testnet deployment/payment is currently published in this repository. Follow the checkpoints below; do not treat example placeholders as deployed addresses.
+**Outcome:** deploy your own checkout, receive a token payment from HBAR, and retain genuine transaction evidence. The reference deployment and a two-wallet payment are [publicly verified](VALIDATION.md#live-testnet-deployment-and-payment--2026-09-22). Follow the checkpoints below for your own copy; placeholders are not deployed addresses.
 
 You do not need a key to install, lint, test, build, start the app or read live quotes. You need a funded **Hedera testnet ECDSA secp256k1 account** to deploy and sign payments.
 
@@ -34,6 +34,8 @@ Edit the new ignored `.env` locally:
 
 ```dotenv
 HEDERA_PRIVATE_KEY=<your-funded-testnet-ECDSA-key>
+# Optional: separate, funded testnet payer for the payment smoke.
+HEDERA_PAYER_PRIVATE_KEY=
 HEDERA_RPC_URL=https://testnet.hashio.io/api
 HEDERA_TOKEN_ID=0.0.1183558
 MAX_TESTNET_HBAR=1
@@ -101,7 +103,7 @@ If a payment transaction was submitted but receipt retrieval timed out, refresh 
 
 ## 6. Optional automated payment smoke
 
-After deployment, this command uses the configured testnet signer as **both merchant and payer**, associates the output token if necessary, creates a one-token invoice, pays it and verifies exact delivery:
+After deployment, this command uses the configured testnet signer as merchant, associates the output token if necessary, creates a one-token invoice, pays it and verifies exact delivery. By default the same signer is also the payer. To test separate accounts, set `HEDERA_PAYER_PRIVATE_KEY` in the ignored Hardhat `.env` to a **separately funded** testnet ECDSA key:
 
 ```bash
 npm run testnet:payment
@@ -109,7 +111,7 @@ npm run testnet:payment
 
 The script enforces `MAX_TESTNET_HBAR` before submitting association or invoice transactions. The cap covers conversion only, not network fees. It writes actual evidence to `deployments/payment-evidence.json`: creation hash, payment hash, amount received, HBAR spent/refunded, and explorer links.
 
-This is a live testnet integration check. It is separate from `npm test`, which uses local mocks. A one-account smoke does not replace checking the two-wallet UI flow.
+This is a live testnet integration check. It is separate from `npm test`, which uses local mocks. The script now supports separate merchant and payer accounts, but its success does not replace testing the injected-wallet UI. The live run exposed a Hedera gas estimate too tight for invoice creation; the script and UI add headroom before submitting writes. Network fees are additional to the HBAR conversion cap.
 
 ## Common blockers
 

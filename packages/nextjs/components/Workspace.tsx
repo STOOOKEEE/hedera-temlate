@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Contract, hexlify, randomBytes, formatUnits } from "ethers";
 import {
   CHECKOUT_ABI,
+  bufferedGasLimit,
   invoiceId,
   tokenUnits,
   type CheckoutConfig,
@@ -72,7 +73,9 @@ export function Workspace() {
     }
     if (code !== 22n)
       throw new Error(`Hedera refused token association (response ${code}).`);
-    const tx = await token.associate();
+    const tx = await token.associate({
+      gasLimit: bufferedGasLimit(await token.associate.estimateGas()),
+    });
     const receipt = await tx.wait();
     if (!receipt || receipt.status !== 1)
       throw new Error("Association was not confirmed.");
@@ -95,11 +98,12 @@ export function Workspace() {
       CHECKOUT_ABI,
       signer,
     );
-    const tx = await contract.createInvoice(
-      reference,
-      units,
-      Math.floor(Date.now() / 1000) + hours * 3600,
-    );
+    const expiresAt = Math.floor(Date.now() / 1000) + hours * 3600;
+    const tx = await contract.createInvoice(reference, units, expiresAt, {
+      gasLimit: bufferedGasLimit(
+        await contract.createInvoice.estimateGas(reference, units, expiresAt),
+      ),
+    });
     setNotice("Creating your invoice on Hedera testnet…");
     const receipt = await tx.wait();
     if (!receipt || receipt.status !== 1)

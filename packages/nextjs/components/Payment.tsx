@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Contract, formatUnits } from "ethers";
 import {
   CHECKOUT_ABI,
+  bufferedGasLimit,
   hbarDisplay,
   paymentTransaction,
   verifyPaymentReceipt,
@@ -84,9 +85,11 @@ export function Payment({ id }: { id: string }) {
   async function pay() {
     if (!data || !quote) return;
     const { signer } = await connectWallet(data.config);
-    const tx = await signer.sendTransaction(
-      paymentTransaction(data.config, quote),
-    );
+    const request = paymentTransaction(data.config, quote);
+    const tx = await signer.sendTransaction({
+      ...request,
+      gasLimit: bufferedGasLimit(await signer.estimateGas(request)),
+    });
     setTxHash(tx.hash);
     // Persist the hash before waiting so refreshing can reconcile a submitted payment.
     window.history.replaceState(
@@ -111,11 +114,10 @@ export function Payment({ id }: { id: string }) {
     const { signer, address } = await connectWallet(data.config);
     if (address.toLowerCase() !== data.invoice.merchant.toLowerCase())
       throw new Error("Only the merchant wallet can cancel this invoice.");
-    const tx = await new Contract(
-      data.config.checkout,
-      CHECKOUT_ABI,
-      signer,
-    ).cancelInvoice(id);
+    const contract = new Contract(data.config.checkout, CHECKOUT_ABI, signer);
+    const tx = await contract.cancelInvoice(id, {
+      gasLimit: bufferedGasLimit(await contract.cancelInvoice.estimateGas(id)),
+    });
     const receipt = await tx.wait();
     if (!receipt || receipt.status !== 1)
       throw new Error("Cancellation was not confirmed.");

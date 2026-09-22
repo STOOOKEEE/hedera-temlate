@@ -2,7 +2,59 @@
 
 [README](../README.md) · [Reviewer walkthrough](REVIEW.md)
 
-## Bounty optimization — 2026-09-22
+## Live testnet deployment and payment — 2026-09-22
+
+The reference checkout is deployed on Hedera testnet (chain 296) at
+`0x92eD50589e2c594c8417234818B6FD7fDEA69334`. The configured settlement
+asset is SAUCE (`0.0.1183558`, six decimals), reached through the real
+SaucerSwap V1 testnet router (`0.0.19264`). No mainnet payment is claimed.
+
+| Evidence                  | Public result                                                                                                                                                                                                                                                                                      |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Contract deployment       | [Successful HashScan transaction](https://hashscan.io/testnet/transaction/0xf810bf564aab4a305b30af5ddff6f95ed87aa8776a439a256f7c846cbb50c136)                                                                                                                                                      |
+| Merchant-created invoice  | [Successful HashScan transaction](https://hashscan.io/testnet/transaction/0xdcab8b3a722e14191dcbdaca9b0db7ab4d22ec1c5687ee60b2690c143e027a8b)                                                                                                                                                      |
+| Separate-payer settlement | [Successful HashScan transaction](https://hashscan.io/testnet/transaction/0xd9d3d092b020d8d0e05825f7636f1be6085d3e935a18d2286d4a5448f42a85d1) · [mirror result](https://testnet.mirrornode.hedera.com/api/v1/contracts/results/0xd9d3d092b020d8d0e05825f7636f1be6085d3e935a18d2286d4a5448f42a85d1) |
+| Hosted receipt            | [Paid invoice with matching transaction](https://saucerpay-hedera.vercel.app/pay/0x8f97d7a7c61394e9f927e2b0d9d7b62fc396d091cfffc0475ab3b13493b58e61?tx=0xd9d3d092b020d8d0e05825f7636f1be6085d3e935a18d2286d4a5448f42a85d1)                                                                         |
+
+![The hosted paid invoice showing exact SAUCE delivery, HBAR spent and unused HBAR returned](paid-invoice.png)
+
+The merchant was `0x8EE8292BDD3E80Af225c2a91Afcc45ccA800f0fe`; the separately
+funded payer was `0x43937DB58f8530B47E807CA9A166F2a9fF7F3645`. Invoice
+`0x8f97d7a7c61394e9f927e2b0d9d7b62fc396d091cfffc0475ab3b13493b58e61`
+is paid. The merchant's token balance increased by exactly **1 SAUCE**
+(`1,000,000` base units). The transaction spent `1,819,519` tinybar
+(`0.01819519` HBAR) on conversion and returned `9,098` tinybar
+(`0.00009098` HBAR) of unused input to the payer. Network fees are additional.
+
+`npm run submission:check` passed against the two-wallet payment, verifying
+the deployed contract, invoice terms, payment event and successful mirror-node
+result. Source lint and type checks, 20 TypeScript tests, 11 contract tests,
+and the production Solidity/Next.js build passed. `npm audit --omit=dev`
+reported no production vulnerabilities. The public Vercel API returned the
+same paid invoice, merchant, payer and amount. In Chromium, the paid page
+rendered without errors, the verified
+receipt download contained the matching merchant, payer, amount and hash, and
+`npm run submission:check -- /tmp/saucerpay-verified-receipt.json` passed on
+that browser-exported file. The 390px mobile page had no horizontal overflow.
+Production deployment `dpl_2h9AgobQdAPkpcWhZcDtfaUv28tm` is
+live at [saucerpay-hedera.vercel.app](https://saucerpay-hedera.vercel.app);
+its page and API smoke checks passed. The private testnet keys remain only in
+ignored local env files, with no key on Vercel.
+
+The first invoice submission failed with `INSUFFICIENT_GAS`: the mirror relay
+estimated `113,262` gas and the transaction exhausted exactly that limit.
+The script and wallet UI now send writes with a 2× gas-limit margin. Invoice
+creation and payments with one and then two accounts succeeded after that change. An
+EVM transfer to the initially absent payer account also exhausted its gas;
+a native Hedera SDK transfer created and funded that account successfully.
+These failed attempts incurred testnet fees but are not cited as payment proof.
+
+The signed payment was executed through the two-account script, and the hosted
+read/receipt/download flow was tested. Injected-wallet signing, mainnet signing
+and USDC settlement have **not** been exercised live. The
+contest entry and developer-experience survey have not been submitted.
+
+## Bounty optimization before the live deployment — 2026-09-22
 
 - Public source `56e15734da4247f717f16869bc2f787c09410289` was freshly generated with the published Scaffold-HBAR CLI, installed, linted, tested, built and booted on port 3024. Its route smoke passed. [Source CI also passed](https://github.com/STOOOKEEE/hedera-temlate/actions/runs/35717199298).
 - The optimized frontend was deployed through the authenticated owner account as Vercel production deployment `dpl_3XCr7P9SUjrsYW1meFPWFG1EdXsr`. The permanent project domain is [saucerpay-hedera.vercel.app](https://saucerpay-hedera.vercel.app); the original project domain remains available.
@@ -12,8 +64,8 @@
 - The new preview endpoint returns real mainnet USDC and testnet SAUCE quotes.
 - Browser checks cover both product examples, stale quote invalidation, delayed-response rejection, disabled undeployed writes and desktop/mobile layouts without page errors.
 - Quote construction rejects mismatched chain, checkout, router, token and WHBAR context; legacy/unbound quotes and previews cannot become payments.
-- The submission script typechecks and exits nonzero for missing evidence or a supplied mainnet evidence file. Its successful live-testnet branch remains unexecuted until a funded account provides genuine payment evidence.
-- The receipt download is implemented for a verified payment, but no live two-wallet payment/export has been exercised yet.
+- At that revision, the submission script only exercised its missing-evidence branch. The successful live-testnet branch is recorded above.
+- At that revision, the receipt download existed but had no live evidence. The current hosted receipt and browser download are verified above.
 
 ![Shared quote component in the prepaid-credit example](examples.png)
 
@@ -83,7 +135,7 @@ Observed 2026-09-22, using real `getAmountsIn` calls with one SAUCE as the reque
 
 These are historical diagnostic observations, not prices promised by the app. Run `npm run probe` for a new observation. No transaction was submitted by these reads.
 
-## Public Vercel demo
+## Initial quote-only Vercel demo (historical)
 
 Published on 2026-09-22 at
 https://temporary-express-mesa-bvkp923.vercel.app using Vercel CLI 59.25.0.
@@ -104,14 +156,3 @@ Verified against the public HTTPS origin:
 
 Source lint, all 19 tests and the monorepo production build also passed after
 adding the hosting preparation script. Hosting setup is documented in HOSTING.md.
-
-## Testnet writes: pending user setup
-
-The user has no configured funded testnet account yet and requested deployment preparation/instructions. Therefore:
-
-- No SaucerPay testnet contract deployment is claimed.
-- No invoice creation, token association or live payment is claimed.
-- No fabricated address, transaction hash or mock receipt is supplied as bounty evidence.
-- `npm run hardhat:deploy` and `npm run testnet:payment` are prepared; follow DEPLOYMENT.md after funding an ECDSA testnet account.
-
-**The bounty's verifiable-testnet-transaction requirement remains incomplete.**

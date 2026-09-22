@@ -88,7 +88,7 @@ In another terminal at the project root:
 npm run smoke
 ```
 
-Expected: lint and types pass, 30 tests pass, build completes, and smoke prints `OK` for the homepage, guide, invoice page and invalid-network response. The last check intentionally sends an invalid request and expects HTTP 400.
+Expected: lint and types pass, 31 tests pass, build completes, and smoke prints `OK` for the homepage, guide, invoice page and invalid-network response. The last check intentionally sends an invalid request and expects HTTP 400.
 
 `npm run probe` separately reads both live networks. Read its per-network results: the command only exits with failure if both probes fail. A zero exit code does not prove both networks are healthy.
 

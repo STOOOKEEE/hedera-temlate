@@ -8,16 +8,17 @@ All commands below run from the repository root. Amounts cross JSON boundaries a
 
 The quote demo starts with no env files. Copy the example files only when enabling deployment or changing the default configuration.
 
-| Variable                  | Read by / file                                | Default                         | Meaning                                                                         |
-| ------------------------- | --------------------------------------------- | ------------------------------- | ------------------------------------------------------------------------------- |
-| `HEDERA_PRIVATE_KEY`      | Hardhat / `packages/hardhat/.env`             | Unset                           | Funded testnet ECDSA key, 32 bytes with `0x` prefix; never send to the frontend |
-| `HEDERA_RPC_URL`          | Hardhat / same file                           | `https://testnet.hashio.io/api` | Deployment and smoke RPC; must report chain 296                                 |
-| `HEDERA_TOKEN_ID`         | Hardhat / same file                           | `0.0.1183558`                   | Token chosen when deploying the immutable contract                              |
-| `MAX_TESTNET_HBAR`        | Payment smoke / same file                     | `1`                             | Maximum conversion spend for the one-token smoke; excludes all network fees     |
-| `HEDERA_NETWORK`          | Next.js server / `packages/nextjs/.env.local` | `testnet`                       | Active invoice network; `mainnet` is read-only in the reference UI              |
-| `HEDERA_TOKEN_ID`         | Next.js server / same file                    | Network default below           | Active settlement token; must match the deployed contract                       |
-| `HEDERA_CHECKOUT_ADDRESS` | Next.js server / same file                    | Unset                           | Actual deployed EVM contract address; absence disables invoice creation         |
-| `SMOKE_ORIGIN`            | Smoke process environment                     | `http://localhost:3000`         | Public or local origin to test, without trailing slash                          |
+| Variable                   | Read by / file                                | Default                         | Meaning                                                                         |
+| -------------------------- | --------------------------------------------- | ------------------------------- | ------------------------------------------------------------------------------- |
+| `HEDERA_PRIVATE_KEY`       | Hardhat / `packages/hardhat/.env`             | Unset                           | Funded testnet ECDSA key, 32 bytes with `0x` prefix; never send to the frontend |
+| `HEDERA_PAYER_PRIVATE_KEY` | Payment smoke / same file                     | Unset                           | Optional separately funded ECDSA payer; otherwise uses the merchant key         |
+| `HEDERA_RPC_URL`           | Hardhat / same file                           | `https://testnet.hashio.io/api` | Deployment and smoke RPC; must report chain 296                                 |
+| `HEDERA_TOKEN_ID`          | Hardhat / same file                           | `0.0.1183558`                   | Token chosen when deploying the immutable contract                              |
+| `MAX_TESTNET_HBAR`         | Payment smoke / same file                     | `1`                             | Maximum conversion spend for the one-token smoke; excludes all network fees     |
+| `HEDERA_NETWORK`           | Next.js server / `packages/nextjs/.env.local` | `testnet`                       | Active invoice network; `mainnet` is read-only in the reference UI              |
+| `HEDERA_TOKEN_ID`          | Next.js server / same file                    | Network default below           | Active settlement token; must match the deployed contract                       |
+| `HEDERA_CHECKOUT_ADDRESS`  | Next.js server / same file                    | Unset                           | Actual deployed EVM contract address; absence disables invoice creation         |
+| `SMOKE_ORIGIN`             | Smoke process environment                     | `http://localhost:3000`         | Public or local origin to test, without trailing slash                          |
 
 Restart Next.js after editing its env file. On Vercel, set these server variables in project settings and redeploy. Hardhat's env file is not loaded by Next.js; `HEDERA_RPC_URL` does **not** override the frontend server's RPC. To customize that RPC, modify `networkConfig` or pass an explicit `CheckoutConfig` in your own integration.
 
@@ -117,6 +118,7 @@ Expect HTTP 400 and `INVALID_NETWORK`. `PENDING_RECEIPT` means retry the **read*
 | `readInvoice(config, id)`                                    | Read stored terms and derive expiry status                                                     |
 | `quotePayment(config, { amount?, invoiceId?, slippageBps })` | Preview or verified invoice quote                                                              |
 | `paymentTransaction(config, quote)`                          | Build testnet transaction; reject preview/stale/inconsistent quotes; convert native value once |
+| `bufferedGasLimit(estimate)`                                 | Double a positive Hedera gas estimate before submitting a wallet write                         |
 | `verifyPaymentReceipt(config, invoice, receipt)`             | Check successful receipt destination, event emitter and matching invoice/merchant/amount       |
 | `tokenUnits(decimalString, decimals)`                        | Parse a positive token amount without floating-point arithmetic                                |
 | `maximumSpend(tinybar, bps)`                                 | Calculate the rounded-up conversion cap                                                        |

@@ -2,13 +2,13 @@
 
 [README](../README.md) · [Validation record](VALIDATION.md) · [Official bounty brief](https://hedera.com/blog/scaffold-hbar-template-bounty/)
 
-This is a navigation guide to the implementation and evidence, not a claim that the submission has passed the eligibility gate. **A genuine SaucerPay testnet transaction is still pending.**
+This is a navigation guide to the implementation and [verified testnet evidence](VALIDATION.md#live-testnet-deployment-and-payment--2026-09-22). The contest submission and organizer eligibility review have not occurred.
 
 For a ready-to-adapt pitch, timed demo and evidence preflight, use [Submission package](SUBMISSION.md).
 
 ## 1. Try the integration without setup
 
-Open [the live demo](https://saucerpay-hedera.vercel.app), enter `1` in the quote panel and request SAUCE testnet and USDC mainnet quotes using the quote-asset selector. They read SaucerSwap; no fabricated price is substituted for a failed request. Invoice creation is disabled until a checkout contract is configured.
+Open [the live demo](https://saucerpay-hedera.vercel.app), enter `1` in the quote panel and request SAUCE testnet and USDC mainnet quotes using the quote-asset selector. They read SaucerSwap; no fabricated price is substituted for a failed request. The hosted app is configured with the testnet checkout. Open the [paid invoice](https://saucerpay-hedera.vercel.app/pay/0x8f97d7a7c61394e9f927e2b0d9d7b62fc396d091cfffc0475ab3b13493b58e61?tx=0xd9d3d092b020d8d0e05825f7636f1be6085d3e935a18d2286d4a5448f42a85d1) to inspect a real two-wallet receipt without a wallet.
 
 ## 2. Generate and run a clean copy
 
@@ -33,8 +33,8 @@ The exact-output conversion and surplus return are implemented in a single payme
 
 ## 4. Check chain evidence honestly
 
-[Deploy on testnet](DEPLOYMENT.md), then exercise the two-wallet UI flow or optional smoke. Only actual successful receipts generate deployment/payment evidence files. The automated smoke uses one account as both merchant and payer and is labeled accordingly.
+[Deploy on testnet](DEPLOYMENT.md), then exercise the two-wallet UI flow or optional smoke. The published [HashScan payment](https://hashscan.io/testnet/transaction/0xd9d3d092b020d8d0e05825f7636f1be6085d3e935a18d2286d4a5448f42a85d1) has separate merchant and payer accounts and passes `npm run submission:check`. The automated smoke supports either one or two accounts and labels the evidence accordingly. The injected-wallet UI signing path has not yet been exercised live.
 
-Before final submission, publish the genuine testnet HashScan or mirror-node link, network, contract, token, invoice and observed result in the validation record. Contract deployment proves deployment; a successful invoice payment demonstrates the whole integration more strongly. A quote, screenshot or local mock cannot stand in for either transaction.
+The [validation record](VALIDATION.md#live-testnet-deployment-and-payment--2026-09-22) gives the genuine testnet links, network, contract, token, invoice and observed result. Contract deployment proves deployment; the successful invoice payment demonstrates the conversion and exact token delivery. A quote, screenshot or local mock cannot stand in for either transaction.
 
 Also complete the official submission fields, including the developer-experience survey. This repository did not use Hedera Harness and does not claim a harness specification or harness validators. Consult the current brief for the final submission requirements.

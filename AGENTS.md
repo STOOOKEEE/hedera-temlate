@@ -52,7 +52,7 @@ Only Hardhat reads `packages/hardhat/.env`. Only the Next.js server reads its `.
 
 Testnet writes require a funded ECDSA secp256k1 account. `npm run hardhat:deploy` and `npm run testnet:payment` perform real writes; ordinary tests, the quote example and probe do not. Follow the user's existing authorization and [deployment instructions](docs/DEPLOYMENT.md). Do not request new credentials when the task only needs reads or local work.
 
-The user has not configured a funded testnet signer for this repository yet. Until real successful receipts exist, keep deployment/payment evidence marked pending. Never fabricate addresses, transaction hashes or a passing result. Use actual public metadata when updating that status.
+This repository now has a verified testnet deployment and a two-wallet payment; see `docs/VALIDATION.md`. The local signer belongs only in the ignored `packages/hardhat/.env`. Never put a key in Git, documentation, frontend env or Vercel. Use actual public metadata for any additional transaction claims.
 
 ## Validation appropriate to a change
 

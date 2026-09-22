@@ -13,6 +13,7 @@ import {
   verifyPaymentReceipt,
   quotePayment,
   previewConfig,
+  bufferedGasLimit,
 } from "../src/index";
 import type { Invoice, Quote } from "../src/index";
 
@@ -43,6 +44,11 @@ const quote: Quote = {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("money and transaction construction", () => {
+  it("adds headroom to Hedera gas estimates before wallet submission", () => {
+    // A live 113262-gas invoice transaction exhausted its unbuffered estimate.
+    expect(bufferedGasLimit(113262n)).toBe(226524n);
+    expect(() => bufferedGasLimit(0n)).toThrow(/Cannot estimate/);
+  });
   it("keeps token precision and rejects ambiguous/out-of-range amounts", () => {
     expect(tokenUnits("1.000001", 6)).toBe(1000001n);
     for (const input of ["1.0000001", "-1", "1e6", "0", "90000000000000000000"])

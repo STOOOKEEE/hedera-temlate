@@ -2,7 +2,7 @@
 
 [README](../README.md) · [Reviewer walkthrough](REVIEW.md) · [Validation](VALIDATION.md)
 
-**Status:** source and live quote demonstrations are available. A successful SaucerPay testnet payment is still required before the chain-evidence section can be completed. This document is a prepared submission draft, not an entry that has been sent to the organizers.
+**Status:** source, live quote demo, testnet deployment and a real two-wallet payment are available. `npm run submission:check` verifies the payment against Hedera RPC and mirror data. This is a prepared submission draft, not an entry that has been sent to the organizers.
 
 ## Short description
 
@@ -20,22 +20,25 @@ The reference checkout uses testnet SAUCE. The USDC preview reads actual mainnet
 - Hosted demo: https://saucerpay-hedera.vercel.app
 - Developer docs: [README navigation](../README.md#find-the-right-guide)
 - Architecture: [payment flow and units](ARCHITECTURE.md)
-- Testnet payment: **pending; insert only the actual verified HashScan/mirror link**
+- Contract deployment: [HashScan](https://hashscan.io/testnet/transaction/0xf810bf564aab4a305b30af5ddff6f95ed87aa8776a439a256f7c846cbb50c136)
+- Two-wallet testnet payment: [HashScan](https://hashscan.io/testnet/transaction/0xd9d3d092b020d8d0e05825f7636f1be6085d3e935a18d2286d4a5448f42a85d1) · [mirror result](https://testnet.mirrornode.hedera.com/api/v1/contracts/results/0xd9d3d092b020d8d0e05825f7636f1be6085d3e935a18d2286d4a5448f42a85d1)
+- [Paid invoice on the hosted app](https://saucerpay-hedera.vercel.app/pay/0x8f97d7a7c61394e9f927e2b0d9d7b62fc396d091cfffc0475ab3b13493b58e61?tx=0xd9d3d092b020d8d0e05825f7636f1be6085d3e935a18d2286d4a5448f42a85d1)
+- Browser-exported receipt: the hosted page's **Download verified receipt** action was exercised, and the downloaded JSON passed `npm run submission:check -- /path/to/downloaded.json`.
 - Demo recording: **not recorded yet; follow the script below**
 
 Do not use a deployment address, quote screenshot or unrelated transaction as proof of a completed payment. The actual receipt must match this template's contract and invoice.
 
 ## Demo script (about two minutes)
 
-1. **0:00–0:20 — Problem.** Open the workspace. Explain: “My service requests USDC; my customer holds HBAR. This starter integrates conversion into an exact-amount payment.” Point out that the merchant testnet flow and mainnet USDC preview are explicitly separate.
+1. **0:00–0:20 — Problem.** Open the workspace. Explain: “My service requests a token; my customer holds HBAR. This starter converts the payment to the exact amount the merchant requested.” State that the live testnet payment uses SAUCE and the mainnet USDC preview is read-only.
 2. **0:20–0:45 — Real integration.** Request a 25 USDC mainnet quote. Show quoted HBAR, maximum spend and token/network provenance. Change the amount; the old quote disappears. Explain that a pool failure produces an error, not a fabricated price.
 3. **0:45–1:05 — Reuse.** Open `/examples`, select service invoice and prepaid API credits. Show that both use `QuotePreview` and that fulfillment remains the application's responsibility.
-4. **1:05–1:40 — Testnet payment, when evidence exists.** Use a real merchant-created testnet invoice and payer wallet. Show verified exact receipt, surplus return, refresh recovery and downloadable JSON. Until this is executed, explicitly state it is pending; do not simulate a successful payment in the recording.
+4. **1:05–1:40 — Testnet payment.** Open the [real paid invoice](https://saucerpay-hedera.vercel.app/pay/0x8f97d7a7c61394e9f927e2b0d9d7b62fc396d091cfffc0475ab3b13493b58e61?tx=0xd9d3d092b020d8d0e05825f7636f1be6085d3e935a18d2286d4a5448f42a85d1) and HashScan result. Show separate merchant/payer addresses, exactly 1 SAUCE delivered, spent HBAR and the surplus refund. Say the payment was submitted by the two-account testnet script; the injected-wallet UI signing path remains to be tested.
 5. **1:40–2:00 — Developer handoff.** Show the one-command scaffold, customization recipe, tests and `npm run submission:check`. Explain that quote context is bound to network/token/contract, and the preflight verifies payment evidence against RPC and mirror data.
 
-## Produce and verify the missing evidence
+## Reproduce and verify chain evidence
 
-Follow [Deployment](DEPLOYMENT.md). Either use the one-account live smoke or the two-wallet UI flow:
+Follow [Deployment](DEPLOYMENT.md). The optional `HEDERA_PAYER_PRIVATE_KEY` allows the script to use a separately funded payer; otherwise it uses one account for both roles:
 
 ```bash
 npm run hardhat:deploy
@@ -51,7 +54,7 @@ npm run submission:check -- /path/to/saucerpay-receipt.json
 
 The preflight checks source metadata, tracked env-file names, configured contract immutables, invoice state, the successful matching payment event, the recorded amount and mirror-node success. Missing or unverifiable evidence results in a nonzero exit code. It does not replace a full secret scan, fresh-build tests, an audit or the organizer's eligibility validator.
 
-Before submitting, run the full fresh-scaffold checks in [Getting started](GETTING_STARTED.md), add only public verified transaction metadata to [Validation](VALIDATION.md), and complete the official form and developer-experience survey. No registration, submission or external outreach is automated here. This project has not used Hedera Harness.
+Before submitting, run the full fresh-scaffold checks in [Getting started](GETTING_STARTED.md), record the demo, and complete the official form and developer-experience survey. The public chain metadata is in [Validation](VALIDATION.md). No registration, submission or external outreach is automated here. This project has not used Hedera Harness.
 
 ## Honest claim boundaries
 
