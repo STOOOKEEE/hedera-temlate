@@ -1,5 +1,7 @@
 # Host SaucerPay on Vercel
 
+[README](../README.md) · [Server configuration](REFERENCE.md#configuration) · [Testnet deployment](DEPLOYMENT.md)
+
 The web app serves real SaucerSwap quotes without any secrets. Hosting the web
 app does not deploy the Solidity contract. See [testnet deployment](DEPLOYMENT.md)
 to enable invoice creation and payment.
@@ -8,20 +10,24 @@ to enable invoice creation and payment.
 
 Import this repository into your Vercel account with these settings:
 
-| Setting | Value |
-| --- | --- |
-| Framework | Next.js |
-| Root Directory | `packages/nextjs` |
-| Include source files outside the Root Directory | Enabled |
-| Node.js | 22.x |
-| Install Command | `npm ci` |
-| Build Command | `npm run build` |
-| Output Directory | Next.js default (`.next`) |
+| Setting                                         | Value                     |
+| ----------------------------------------------- | ------------------------- |
+| Framework                                       | Next.js                   |
+| Root Directory                                  | `packages/nextjs`         |
+| Include source files outside the Root Directory | Enabled                   |
+| Node.js                                         | 22.x                      |
+| Install Command                                 | `npm ci`                  |
+| Build Command                                   | `npm run build`           |
+| Output Directory                                | Next.js default (`.next`) |
 
 The frontend imports the sibling `packages/checkout` npm workspace. Keep the
 repository root lockfile and workspace packages available during the build.
 No environment variables are required for the quote demo. Once deployed, use
 the public production URL in your own README and project metadata.
+
+These are the settings for a Git-connected monorepo deployment. The current
+public demo was validated using the packaged CLI method below; the Git import
+settings have not been independently exercised in an authenticated account.
 
 Optional server-side variables are `HEDERA_NETWORK`, `HEDERA_TOKEN_ID` and
 `HEDERA_CHECKOUT_ADDRESS`. Mainnet remains read-only in the reference UI.

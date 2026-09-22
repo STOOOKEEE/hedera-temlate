@@ -1,55 +1,136 @@
-# From invoices to a purchase button
+# Adapt the template to your application
 
-The UI is an example. Keep `packages/checkout` and `SaucerPay.sol`, replace `packages/nextjs/components/Workspace.tsx` with your product, booking or marketplace screen.
+[README](../README.md) · [API reference](REFERENCE.md) · [Architecture](ARCHITECTURE.md)
 
-## Create a merchant order
+Start from the generated monorepo. Keep the checkout package and contract; replace the invoice workspace with your service, product or top-up screen. `@saucerpay/checkout` is a local workspace package, not a public registry dependency.
 
-1. Choose a merchant-controlled wallet and an order reference. Hash a non-sensitive unique order identifier to bytes32, or use 32 random bytes. Do not publish personal customer data on-chain.
-2. The merchant signs `createInvoice(reference, amountInTokenUnits, expiresAt)`. Record the ID computed by `invoiceId(merchantAddress, reference)` alongside your order.
-3. Return `/pay/<id>` to the buyer. The payment page reads amount and recipient from the contract. Do not put a recipient override or mutable price in the payment link.
+## A small first change
 
-Merchant creation is an on-chain transaction. This template does not provide unattended server-side invoice signing. That is a separate custody/authorization decision for a production service.
+1. Change the headline/product copy in [Workspace.tsx](../packages/nextjs/components/Workspace.tsx).
+2. Keep the quote call and payment route unchanged.
+3. Run `npm run lint`, `npm run build`, then open the app and request a quote.
 
-## A custom payer UI
+This confirms that your product screen can use the existing payment integration before you change contract behavior.
 
-Use `quotePayment` from your server, then `paymentTransaction` with an EVM signer on the client. The server quote endpoint accepts `invoiceId` and `slippageBps`. The quote includes the on-chain invoice, a spend cap and a short deadline. Display the maximum HBAR spend and additional network fee distinction before the user signs.
+## Map a product order to an invoice
 
-If you change amount, invoice, network or slippage selection, discard the old quote. Do not multiply output token units by the Hedera RPC conversion factor. The shared transaction builder already handles native value conversion.
+Choose a merchant wallet and a non-sensitive, unique bytes32 reference. The reference is public; do not put customer data or a guessable hash of confidential information into it. The demo uses random bytes.
 
-## Fulfillment example
-
-An app server should independently obtain the receipt from its configured Hedera RPC endpoint and the invoice from its configured checkout contract. Feed those trusted reads to `verifyPaymentReceipt`; do not accept a browser-supplied receipt as authoritative.
+Merchant creation is an on-chain transaction. This template does not include an unattended invoice signer. The following function assumes your UI has connected a merchant signer on testnet and collected an amount; it is an integration example, not a script that should load a private key in the browser.
 
 ```ts
-// Pseudocode around the real shared verifier. Supply your own database/client.
-const invoice = await readInvoice(config, order.invoiceId);
-const receipt = await provider.getTransactionReceipt(submittedHash);
-if (!receipt) return { status: "pending" };
-const payment = verifyPaymentReceipt(config, invoice, receipt);
+import { Contract, hexlify, randomBytes, type Signer } from "ethers";
+import {
+  CHECKOUT_ABI,
+  assertAssociated,
+  assertDeployment,
+  invoiceId,
+  readToken,
+  tokenUnits,
+  type CheckoutConfig,
+} from "@saucerpay/checkout";
 
-// Unique constraint: (chainId, checkoutAddress, invoiceId).
-// In the same database transaction, mark paid and enqueue fulfillment once.
-await orders.recordVerifiedPaymentOnce({
-  orderId: order.id,
-  chainId: config.chainId,
-  checkoutAddress: config.checkout,
-  invoiceId: payment.id,
-  transactionHash: receipt.hash,
-});
+export async function createOrderInvoice(
+  config: CheckoutConfig,
+  merchantSigner: Signer,
+  amount: string,
+) {
+  if (config.network !== "testnet" || !merchantSigner.provider)
+    throw new Error("Use a connected testnet merchant signer.");
+  if ((await merchantSigner.provider.getNetwork()).chainId !== 296n)
+    throw new Error("Switch the merchant wallet to testnet.");
+  const checkout = await assertDeployment(config);
+  const merchant = await merchantSigner.getAddress();
+  await assertAssociated(config, merchant);
+  const token = await readToken(config);
+  const reference = hexlify(randomBytes(32));
+  const expiresAt = Math.floor(Date.now() / 1000) + 3600;
+  const contract = new Contract(checkout, CHECKOUT_ABI, merchantSigner);
+  const tx = await contract.createInvoice(
+    reference,
+    tokenUnits(amount, token.decimals),
+    expiresAt,
+  );
+  const receipt = await tx.wait();
+  if (!receipt || receipt.status !== 1)
+    throw new Error("Creation unconfirmed.");
+  const id = invoiceId(merchant, reference);
+  return { id, reference, creationHash: receipt.hash, path: `/pay/${id}` };
+}
 ```
 
-An event proves payment to the recorded merchant; it does not prove that the merchant shipped an item or that the payer is a particular logged-in customer. Those are application concerns.
+Obtain `config` from your configured server (`/api/config`) or `networkConfig("testnet", deployedAddress)`. Store the returned invoice ID alongside your application order. Include chain ID and checkout address in that mapping. Invoices are not scoped by a logged-in customer; anyone may pay an open invoice.
 
-## Change settlement asset
+## Reuse the payer page first
 
-Set matching `HEDERA_TOKEN_ID` values in the two package env files and deploy a new checkout. The token must be an active fungible HTS asset without custom transfer fees, and the direct WHBAR pool must have sufficient liquidity. The receiving merchant must satisfy association and token policy requirements. The server compares router/WHBAR/token immutables against configuration before allowing an invoice payment.
+Return `/pay/<invoiceId>` on your deployment's origin. The included [Payment component](../packages/nextjs/components/Payment.tsx) already loads immutable terms, requests a quote, switches to testnet, constructs the payable transaction and recovers receipts after refresh.
 
-Existing invoices stay bound to their original deployment and token. Keep old deployment URLs available if you change configuration. The reference app intentionally serves one deployment at a time; production multi-merchant support should make the deployment identity explicit in saved order records and routes.
+For a custom UI, the sequence is:
 
-## Production extensions to consider when needed
+1. Request `/api/quote?invoiceId=<id>&slippageBps=50` from your server.
+2. Display the token amount, merchant, maximum HBAR spend and additional network fee distinction.
+3. Connect a testnet signer using the existing [wallet adapter](../packages/nextjs/lib/wallet.ts).
+4. Pass the returned quote to `paymentTransaction(config, quote)` and send it with the signer.
+5. Save the transaction hash before waiting; use the receipt API to recover after interruption.
 
-- Index `InvoiceCreated`, `InvoicePaid` and `InvoiceCancelled` for an account history.
-- Add your database-backed product catalog and immutable order mapping.
-- Implement webhook delivery with idempotency and retries, separately from wallet payment retries.
-- Add mobile or WalletConnect adapters while retaining the chain and receipt checks.
-- Add another vetted payment adapter only with tests covering its units, route, delivery and refund semantics.
+An amount-only preview quote cannot be paid. Discard old quotes when the invoice, network or slippage changes. Never multiply token units by the HBAR conversion factor: the transaction builder handles native value conversion exactly once.
+
+## Fulfill the order on your server
+
+Fetch the invoice and receipt independently through your configured contract/RPC. Do not accept a browser-supplied receipt, merchant address or price as authoritative. This function performs reads only and can be called from a server route:
+
+```ts
+import { JsonRpcProvider } from "ethers";
+import {
+  assertDeployment,
+  readInvoice,
+  verifyPaymentReceipt,
+  type CheckoutConfig,
+} from "@saucerpay/checkout";
+
+export async function readVerifiedPayment(
+  config: CheckoutConfig,
+  trustedInvoiceId: string,
+  transactionHash: string,
+) {
+  await assertDeployment(config);
+  const provider = new JsonRpcProvider(config.rpcUrl);
+  if ((await provider.getNetwork()).chainId !== BigInt(config.chainId))
+    throw new Error("RPC network mismatch.");
+  const invoice = await readInvoice(config, trustedInvoiceId);
+  const receipt = await provider.getTransactionReceipt(transactionHash);
+  if (!receipt) return null; // Pending: retry the read, not the payment.
+  return verifyPaymentReceipt(config, invoice, receipt);
+}
+```
+
+The `trustedInvoiceId` comes from your authenticated order record, not an arbitrary customer query. Also compare the loaded invoice terms with that record. The verifier matches the chain receipt to the invoice; it does not know your product price or which application account owns an order.
+
+Once verified, implement these **application-specific database steps**:
+
+1. Enforce a unique payment identity: `(chainId, checkoutAddress, invoiceId)`.
+2. In one database transaction, mark that order paid and enqueue fulfillment once.
+3. For a credit top-up, credit its authenticated owner's ledger once. Handle usage and service refunds separately.
+4. Make the fulfillment worker retryable without re-sending a wallet payment.
+
+An event proves payment to the recorded merchant. It does not prove shipping, download delivery or the payer's off-chain identity.
+
+## Change the settlement asset
+
+Set the same testnet `HEDERA_TOKEN_ID` in both package env files, validate a real direct-pool quote, and deploy a **new** checkout. The asset must be active, fungible, supported in decimals, and without custom fees. The merchant must be associated and satisfy any token policies. Match the new checkout address in the frontend and restart.
+
+Do not overwrite an existing deployment's configuration and assume old links still work. The reference app serves one configured contract; keep the old instance available or implement routes that explicitly select a validated deployment. Save deployment identity in every order record.
+
+[USDC feasibility and current limits](USE_CASES.md#choosing-a-settlement-token). Changing `SAUCE` to `USDC` in the UI is not a token integration.
+
+## Extension map
+
+| Change                         | Start here                                            | Preserve                                                      |
+| ------------------------------ | ----------------------------------------------------- | ------------------------------------------------------------- |
+| Product or booking interface   | `Workspace.tsx`                                       | Immutable invoice amount/merchant                             |
+| Mobile wallet support          | `lib/wallet.ts`                                       | Chain checks and wallet consent                               |
+| Durable merchant history       | Event indexer + your database                         | Namespaced IDs and original deployment identity               |
+| Paid content or credits        | Server receipt verification + your fulfillment worker | Idempotency; payment is not delivery                          |
+| Another swap protocol or route | Shared quote module + contract + tests                | Native units, exact output, budget, refunds and receipt rules |
+
+Contract, money-unit or receipt changes need meaningful regression tests and a real testnet check. UI copy changes do not establish new chain guarantees.
